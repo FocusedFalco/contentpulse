@@ -136,7 +136,19 @@ export async function POST(req: NextRequest) {
         const videoTitle = item.snippet.title;
         const publishDateStr = new Date(item.snippet.publishedAt).toISOString().split('T')[0];
         const videoAuthor = item.snippet.channelTitle || 'YouTube Creator';
-        const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+        let videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+        try {
+          const checkRes = await fetch(`https://www.youtube.com/shorts/${videoId}`, {
+            method: 'HEAD',
+            redirect: 'manual'
+          });
+          if (checkRes.status === 200) {
+            videoUrl = `https://www.youtube.com/shorts/${videoId}`;
+          }
+        } catch (err) {
+          console.warn(`Failed to verify if video ${videoId} is a Short:`, err);
+        }
+
         const stats = videoStatsMap[videoId] || { views: Math.floor(1000 + Math.random() * 5000), duration: 600 };
 
         // Save Content Item
@@ -245,11 +257,32 @@ export async function POST(req: NextRequest) {
     let duration: number | null = null;
     let publicViews = 0;
 
+    let resolvedUrl = url;
+
     // Detect platform/channel based on URL domain
     const urlLower = url.toLowerCase();
     if (urlLower.includes('youtube.com') || urlLower.includes('youtu.be')) {
       channel = 'youtube';
       format = 'video';
+
+      // Resolve video ID and verify if it's a Short via HEAD request
+      const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/i);
+      const videoId = match ? match[1] : null;
+      if (videoId) {
+        try {
+          const checkRes = await fetch(`https://www.youtube.com/shorts/${videoId}`, {
+            method: 'HEAD',
+            redirect: 'manual'
+          });
+          if (checkRes.status === 200) {
+            resolvedUrl = `https://www.youtube.com/shorts/${videoId}`;
+          } else {
+            resolvedUrl = `https://www.youtube.com/watch?v=${videoId}`;
+          }
+        } catch (err) {
+          console.warn(`Failed to verify if video ${videoId} is a Short:`, err);
+        }
+      }
     } else if (urlLower.includes('substack.com')) {
       channel = 'newsletter';
       format = 'newsletter';
@@ -345,7 +378,7 @@ export async function POST(req: NextRequest) {
     const insertRes = await query(
       `INSERT INTO content_items (title, channel, format, word_count, duration, publish_date, author, url)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING content_id`,
-      [title, channel, format, wordCount, duration, publishDate, author, url]
+      [title, channel, format, wordCount, duration, publishDate, author, resolvedUrl]
     );
     const contentId = insertRes.rows[0].content_id;
 

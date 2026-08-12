@@ -29,6 +29,14 @@ export interface LengthMetrics {
   conversionRate: number;
 }
 
+export interface VideoLengthMetrics {
+  bucket: string;
+  piecesCount: number;
+  avgViews: number;
+  avgTimeOnPage: number;
+  conversionRate: number;
+}
+
 export interface ContentGap {
   query: string;
   impressions: number;
@@ -49,6 +57,7 @@ export interface StructuredAnalysisResult {
   topics: TopicMetrics[];
   formats: FormatMetrics[];
   lengthBuckets: LengthMetrics[];
+  videoLengthBuckets: VideoLengthMetrics[];
   contentGaps: ContentGap[];
   recommendations: Recommendation[];
   timeframe: string;
@@ -226,6 +235,54 @@ export async function runAnalysis(): Promise<StructuredAnalysisResult> {
     conversionRate: parseFloat(row.conversion_rate)
   }));
 
+  // 3.5 Video Duration Buckets (Short-form <3m vs Long-form >=3m)
+  const videoLengthSql = `
+    WITH video_totals AS (
+      SELECT 
+        i.content_id,
+        i.duration,
+        SUM(m.views) as views,
+        SUM(m.conversions) as conversions,
+        AVG(m.avg_time_on_page) as avg_time
+      FROM content_items i
+      JOIN content_metrics_daily m ON i.content_id = m.content_id
+      WHERE i.format = 'video' AND i.duration IS NOT NULL AND i.duration > 0
+      GROUP BY i.content_id, i.duration
+    ),
+    bucketed AS (
+      SELECT 
+        CASE 
+          WHEN duration <= 180 THEN '9:16 (Short-form)'
+          ELSE '16:9 (Long-form)'
+        END as bucket,
+        views,
+        conversions,
+        avg_time
+      FROM video_totals
+    )
+    SELECT 
+      bucket,
+      COUNT(*) as pieces_count,
+      AVG(views) as avg_views,
+      AVG(avg_time) as avg_time_on_page,
+      CASE WHEN SUM(views) > 0 THEN (SUM(conversions)::numeric / SUM(views)::numeric) * 100 ELSE 0 END as conversion_rate
+    FROM bucketed
+    GROUP BY bucket
+    ORDER BY 
+      CASE bucket
+        WHEN '9:16 (Short-form)' THEN 1
+        ELSE 2
+      END
+  `;
+  const videoLengthRes = await query(videoLengthSql);
+  const videoLengthBuckets: VideoLengthMetrics[] = videoLengthRes.rows.map(row => ({
+    bucket: row.bucket,
+    piecesCount: parseInt(row.pieces_count, 10),
+    avgViews: Math.round(parseFloat(row.avg_views)),
+    avgTimeOnPage: Math.round(parseFloat(row.avg_time_on_page)),
+    conversionRate: parseFloat(row.conversion_rate)
+  }));
+
   // 4. Content Gaps (Search Console queries with high impressions but no matching content)
   const gapsSql = `
     SELECT 
@@ -284,15 +341,17 @@ export async function runAnalysis(): Promise<StructuredAnalysisResult> {
     });
   }
 
-  // If no topic fell below, find the weakest format or generic stopping candidate
-  if (poorTopics.length === 0 && formats.length > 0) {
+  // If no topic fell below, find the weakest format if it is actually underperforming (percentile < 45%) and we have multiple formats to compare
+  if (poorTopics.length === 0 && formats.length > 1) {
     const worstFormat = formats[formats.length - 1];
-    recommendations.push({
-      action: 'STOP',
-      target: `Format: ${worstFormat.format}`,
-      reason: `Format is in the bottom quartile of overall content performance (avg percentile of ${worstFormat.avgPercentile.toFixed(1)}%). Consider scaling back production.`,
-      metrics: { avgPercentile: worstFormat.avgPercentile }
-    });
+    if (worstFormat.avgPercentile < 45.0) {
+      recommendations.push({
+        action: 'STOP',
+        target: `Format: ${worstFormat.format}`,
+        reason: `Format has the lowest relative performance in your content mix (avg percentile of ${worstFormat.avgPercentile.toFixed(1)}%). Consider scaling back production.`,
+        metrics: { avgPercentile: worstFormat.avgPercentile }
+      });
+    }
   }
 
   // C. Create recommendations (from Search Gaps & top-performer expansions)
@@ -319,6 +378,7 @@ export async function runAnalysis(): Promise<StructuredAnalysisResult> {
     topics,
     formats,
     lengthBuckets,
+    videoLengthBuckets,
     contentGaps,
     recommendations,
     timeframe: 'Last 90 Days'

@@ -173,14 +173,20 @@ export default function DashboardView({ data }: DashboardViewProps) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-success)', fontWeight: 700, fontFamily: 'var(--font-display)', fontSize: '16px' }}>
             CONTINUE & AMPLIFY
           </div>
-          {data.recommendations.filter(r => r.action === 'CONTINUE').map((rec, i) => (
-            <div key={i} style={{ marginTop: '16px' }}>
-              <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text)' }}>{rec.target}</h4>
-              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '6px', lineHeight: '1.5' }}>
-                {rec.reason}
-              </p>
-            </div>
-          ))}
+          {data.recommendations.filter(r => r.action === 'CONTINUE').length === 0 ? (
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '16px', lineHeight: '1.5' }}>
+              No high-performing topic clusters identified yet. Keep importing content to find your top converting topics!
+            </p>
+          ) : (
+            data.recommendations.filter(r => r.action === 'CONTINUE').map((rec, i) => (
+              <div key={i} style={{ marginTop: '16px' }}>
+                <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text)' }}>{rec.target}</h4>
+                <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '6px', lineHeight: '1.5' }}>
+                  {rec.reason}
+                </p>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Stop Cards */}
@@ -188,14 +194,20 @@ export default function DashboardView({ data }: DashboardViewProps) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-error)', fontWeight: 700, fontFamily: 'var(--font-display)', fontSize: '16px' }}>
             STOP & REALLOCATE
           </div>
-          {data.recommendations.filter(r => r.action === 'STOP').map((rec, i) => (
-            <div key={i} style={{ marginTop: '16px' }}>
-              <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text)' }}>{rec.target}</h4>
-              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '6px', lineHeight: '1.5' }}>
-                {rec.reason}
-              </p>
-            </div>
-          ))}
+          {data.recommendations.filter(r => r.action === 'STOP').length === 0 ? (
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '16px', lineHeight: '1.5' }}>
+              All formats and topics are performing above underperformance thresholds. Keep up the good work!
+            </p>
+          ) : (
+            data.recommendations.filter(r => r.action === 'STOP').map((rec, i) => (
+              <div key={i} style={{ marginTop: '16px' }}>
+                <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text)' }}>{rec.target}</h4>
+                <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '6px', lineHeight: '1.5' }}>
+                  {rec.reason}
+                </p>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Create Cards */}
@@ -203,16 +215,22 @@ export default function DashboardView({ data }: DashboardViewProps) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)', fontWeight: 700, fontFamily: 'var(--font-display)', fontSize: '16px' }}>
             CREATE (ORGANIC GAPS)
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '14px' }}>
-            {data.recommendations.filter(r => r.action === 'CREATE').slice(0, 2).map((rec, i) => (
-              <div key={i} style={{ paddingBottom: i === 0 ? '12px' : 0, borderBottom: i === 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-                <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-text)' }}>{rec.target}</h4>
-                <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px', lineHeight: '1.4' }}>
-                  {rec.reason}
-                </p>
-              </div>
-            ))}
-          </div>
+          {data.recommendations.filter(r => r.action === 'CREATE').length === 0 ? (
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '16px', lineHeight: '1.5' }}>
+              No content gaps detected. Your organic search coverage is healthy!
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '14px' }}>
+              {data.recommendations.filter(r => r.action === 'CREATE').slice(0, 2).map((rec, i) => (
+                <div key={i} style={{ paddingBottom: i === 0 && data.recommendations.filter(r => r.action === 'CREATE').length > 1 ? '12px' : 0, borderBottom: i === 0 && data.recommendations.filter(r => r.action === 'CREATE').length > 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-text)' }}>{rec.target}</h4>
+                  <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px', lineHeight: '1.4' }}>
+                    {rec.reason}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -275,75 +293,118 @@ export default function DashboardView({ data }: DashboardViewProps) {
         </div>
 
         {/* Article Length Chart Card */}
-        <div className="glass-card" style={{ padding: '28px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-display)' }}>Article Length Curve (Diminishing Returns)</h3>
-          <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '24px' }}>
-            Word count buckets vs. time on page (seconds) and conversion rate (%)
-          </p>
+        {data.lengthBuckets.some(b => b.piecesCount > 0) && (
+          <div className="glass-card" style={{ padding: '28px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-display)' }}>Article Length Curve (Diminishing Returns)</h3>
+            <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '24px' }}>
+              Word count buckets vs. time on page (seconds) and conversion rate (%)
+            </p>
 
-          {/* SVG Line / Area Graph */}
-          <div style={{ height: '180px', width: '100%', position: 'relative', marginBottom: '16px' }}>
-            <svg viewBox="0 0 400 150" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-              <defs>
-                <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.4"/>
-                  <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0"/>
-                </linearGradient>
-              </defs>
-              
-              {/* Grid Lines */}
-              <line x1="10" y1="120" x2="390" y2="120" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-              <line x1="10" y1="75" x2="390" y2="75" stroke="rgba(255,255,255,0.05)" strokeWidth="1" strokeDasharray="4" />
-              <line x1="10" y1="30" x2="390" y2="30" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+            {/* SVG Line / Area Graph */}
+            <div style={{ height: '180px', width: '100%', position: 'relative', marginBottom: '16px' }}>
+              <svg viewBox="0 0 400 150" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+                <defs>
+                  <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.4"/>
+                    <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0"/>
+                  </linearGradient>
+                </defs>
+                
+                {/* Grid Lines */}
+                <line x1="10" y1="120" x2="390" y2="120" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+                <line x1="10" y1="75" x2="390" y2="75" stroke="rgba(255,255,255,0.05)" strokeWidth="1" strokeDasharray="4" />
+                <line x1="10" y1="30" x2="390" y2="30" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
 
-              {/* Data points mapping for word count buckets
-                  x coordinates: Short (60), Mid (160), Deep (260), Mega (360)
-                  y coordinates: based on time-on-page (higher values = lower y)
-                  Y mapping: 120 (base) down to 20 (max avg time 300)
-              */}
-              {/* Curved Area under the line */}
-              <path 
-                d="M 60 120 Q 160 80, 260 40 T 360 30 L 360 120 L 60 120 Z" 
-                fill="url(#areaGrad)" 
-              />
-              
-              {/* Curved Line */}
-              <path 
-                d="M 60 120 Q 160 80, 260 40 T 360 30" 
-                fill="none" 
-                stroke="var(--color-primary)" 
-                strokeWidth="3" 
-                strokeLinecap="round"
-              />
+                {/* Curved Area under the line */}
+                <path 
+                  d="M 60 120 Q 160 80, 260 40 T 360 30 L 360 120 L 60 120 Z" 
+                  fill="url(#areaGrad)" 
+                />
+                
+                {/* Curved Line */}
+                <path 
+                  d="M 60 120 Q 160 80, 260 40 T 360 30" 
+                  fill="none" 
+                  stroke="var(--color-primary)" 
+                  strokeWidth="3" 
+                  strokeLinecap="round"
+                />
 
-              {/* Data Points */}
-              <circle cx="60" cy="120" r="5" fill="#fff" stroke="var(--color-primary)" strokeWidth="2" />
-              <circle cx="160" cy="80" r="5" fill="#fff" stroke="var(--color-primary)" strokeWidth="2" />
-              <circle cx="260" cy="40" r="5" fill="#fff" stroke="var(--color-primary)" strokeWidth="2" />
-              <circle cx="360" cy="30" r="5" fill="#fff" stroke="var(--color-primary)" strokeWidth="2" />
+                {/* Data Points */}
+                <circle cx="60" cy="120" r="5" fill="#fff" stroke="var(--color-primary)" strokeWidth="2" />
+                <circle cx="160" cy="80" r="5" fill="#fff" stroke="var(--color-primary)" strokeWidth="2" />
+                <circle cx="260" cy="40" r="5" fill="#fff" stroke="var(--color-primary)" strokeWidth="2" />
+                <circle cx="360" cy="30" r="5" fill="#fff" stroke="var(--color-primary)" strokeWidth="2" />
 
-              {/* Labels */}
-              <text x="60" y="140" fill="var(--color-text-muted)" fontSize="9" textAnchor="middle">&lt;600w</text>
-              <text x="160" y="140" fill="var(--color-text-muted)" fontSize="9" textAnchor="middle">600-1200w</text>
-              <text x="260" y="140" fill="var(--color-text-muted)" fontSize="9" textAnchor="middle">1200-2000w</text>
-              <text x="360" y="140" fill="var(--color-text-muted)" fontSize="9" textAnchor="middle">2000w+</text>
-            </svg>
-          </div>
+                {/* Labels */}
+                <text x="60" y="140" fill="var(--color-text-muted)" fontSize="9" textAnchor="middle">&lt;600w</text>
+                <text x="160" y="140" fill="var(--color-text-muted)" fontSize="9" textAnchor="middle">600-1200w</text>
+                <text x="260" y="140" fill="var(--color-text-muted)" fontSize="9" textAnchor="middle">1200-2000w</text>
+                <text x="360" y="140" fill="var(--color-text-muted)" fontSize="9" textAnchor="middle">2000w+</text>
+              </svg>
+            </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', textAlign: 'center' }}>
-            {data.lengthBuckets.map((bucket, idx) => (
-              <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{bucket.bucket.split(' ')[0]}</div>
-                <div style={{ fontSize: '14px', fontWeight: 700, margin: '4px 0', color: 'var(--color-primary)' }}>
-                  {bucket.avgTimeOnPage}s
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', textAlign: 'center' }}>
+              {data.lengthBuckets.map((bucket, idx) => (
+                <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{bucket.bucket.split(' ')[0]}</div>
+                  <div style={{ fontSize: '14px', fontWeight: 700, margin: '4px 0', color: 'var(--color-primary)' }}>
+                    {bucket.avgTimeOnPage}s
+                  </div>
+                  <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-success)' }}>
+                    {bucket.conversionRate.toFixed(2)}% CR
+                  </div>
                 </div>
-                <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-success)' }}>
-                  {bucket.conversionRate.toFixed(2)}% CR
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Video Duration Card */}
+        {data.videoLengthBuckets.some(b => b.piecesCount > 0) && (
+          <div className="glass-card" style={{ padding: '28px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-display)' }}>Video Aspect Ratio Performance</h3>
+            <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '24px' }}>
+              9:16 (Short-form/Vertical) vs. 16:9 (Long-form/Horizontal) performance comparison
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {data.videoLengthBuckets.map((bucket, idx) => (
+                <div key={idx} style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-primary)' }}>
+                      {bucket.bucket}
+                    </span>
+                    <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '4px' }}>
+                      {bucket.piecesCount} {bucket.piecesCount === 1 ? 'video' : 'videos'}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', textAlign: 'left' }}>
+                    <div>
+                      <div style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>Avg Views</div>
+                      <div style={{ fontSize: '15px', fontWeight: 800, marginTop: '4px', color: '#fff' }}>
+                        {bucket.avgViews.toLocaleString()}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>Avg Watch Time</div>
+                      <div style={{ fontSize: '15px', fontWeight: 800, marginTop: '4px', color: '#fff' }}>
+                        {Math.floor(bucket.avgTimeOnPage / 60)}m {bucket.avgTimeOnPage % 60}s
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>Conversion Rate</div>
+                      <div style={{ fontSize: '15px', fontWeight: 800, marginTop: '4px', color: 'var(--color-success)' }}>
+                        {bucket.conversionRate.toFixed(2)}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
       </section>
 
