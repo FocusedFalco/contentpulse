@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StructuredAnalysisResult, TopicMetrics, FormatMetrics, LengthMetrics, ContentGap, Recommendation } from '../lib/analysis/analysis';
 import Link from 'next/link';
 
@@ -11,23 +11,7 @@ interface DashboardViewProps {
 export default function DashboardView({ data }: DashboardViewProps) {
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
-  const [connections, setConnections] = useState({
-    databaseConfigured: false,
-    geminiConfigured: false,
-    slackConfigured: false,
-    youtubeConfigured: false,
-  });
 
-  useEffect(() => {
-    fetch('/api/settings')
-      .then(res => res.json())
-      .then(data => {
-        if (data) {
-          setConnections(data);
-        }
-      })
-      .catch(err => console.error('Failed to fetch credentials status:', err));
-  }, []);
 
   // Calculate high-level summary metrics
   const totalViews = data.topics.reduce((acc, t) => acc + t.totalViews, 0);
@@ -82,29 +66,7 @@ export default function DashboardView({ data }: DashboardViewProps) {
         </div>
       </header>
 
-      {/* Platform Connections Status Bar */}
-      <section style={{ display: 'flex', gap: '16px', marginBottom: '32px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', fontSize: '12px' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-success)', display: 'inline-block' }}></span>
-          <span style={{ color: 'var(--color-text-muted)' }}>GA4 Web Analytics:</span>
-          <strong style={{ color: '#fff' }}>Connected</strong>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', fontSize: '12px' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-success)', display: 'inline-block' }}></span>
-          <span style={{ color: 'var(--color-text-muted)' }}>Search Console:</span>
-          <strong style={{ color: '#fff' }}>Connected</strong>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', fontSize: '12px' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: connections.youtubeConfigured ? 'var(--color-success)' : 'rgba(255,255,255,0.2)', display: 'inline-block' }}></span>
-          <span style={{ color: 'var(--color-text-muted)' }}>YouTube Ingest:</span>
-          <strong style={{ color: '#fff' }}>{connections.youtubeConfigured ? 'Connected' : 'Crawler Only'}</strong>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', fontSize: '12px' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-success)', display: 'inline-block' }}></span>
-          <span style={{ color: 'var(--color-text-muted)' }}>Newsletter RSS:</span>
-          <strong style={{ color: '#fff' }}>Active</strong>
-        </div>
-      </section>
+
 
       {syncStatus && (
         <div style={{ background: 'var(--color-primary-glow)', border: '1px solid var(--color-primary)', padding: '12px 16px', borderRadius: '8px', marginBottom: '24px', fontSize: '14px' }}>
