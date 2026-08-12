@@ -7,6 +7,7 @@ interface OnboardingWizardProps {
 }
 
 export default function OnboardingWizard({ initialError }: OnboardingWizardProps) {
+  const [step, setStep] = useState<'landing' | 'import'>('landing');
   const [contentUrl, setContentUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(initialError || null);
@@ -37,11 +38,11 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
       const count = data.count || 1;
 
       if (isChannel) {
-        setStatusLog(`Success! Imported YouTube channel with ${count} latest videos.`);
-        setSuccessMsg(`Imported channel feed successfully!`);
+        setStatusLog(`Success! Imported channel with ${count} latest items.`);
+        setSuccessMsg(`Imported feed successfully!`);
       } else {
         setStatusLog(`Success! Extracted: "${data.content.title}" (${data.content.topic})`);
-        setSuccessMsg('First content article scraped successfully!');
+        setSuccessMsg('Content source scraped successfully!');
       }
 
       setTimeout(() => {
@@ -76,88 +77,128 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
         </p>
       </header>
 
-      {/* Hero Visual Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '48px' }}>
-        <div className="glass-card" style={{ padding: '24px', borderTop: '2px solid var(--color-primary)' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 8px 0' }}>Multi-Channel Normalization</h3>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
-            Compare articles, YouTube videos, newsletters, and social posts on a level playing field using percentile scoring.
-          </p>
-        </div>
-        <div className="glass-card" style={{ padding: '24px', borderTop: '2px solid var(--color-secondary)' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 8px 0' }}>Organic Search Gap Analysis</h3>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
-            Identify search keywords that bring impressions but zero clicks, automatically flagging opportunities to capture traffic.
-          </p>
-        </div>
-        <div className="glass-card" style={{ padding: '24px', borderTop: '2px solid var(--color-success)' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 8px 0' }}>Gemini Editorial Intelligence</h3>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
-            Leverage Gemini 2.5 Flash to automatically output high-impact action recommendations: Continue, Stop, or Create.
-          </p>
-        </div>
-      </div>
-
-      {/* Main Single-Step Onboarding Form */}
-      <div className="glass-card" style={{ padding: '40px', maxWidth: '640px', margin: '0 auto', border: '1px solid rgba(255,255,255,0.08)' }}>
-        
-        <form onSubmit={handleScrapeFirstUrl} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: 700, margin: 0, fontFamily: 'var(--font-display)' }}>
-            Launch Your Dashboard
-          </h2>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: '13px', margin: 0, lineHeight: '1.6' }}>
-            Paste a link to your YouTube channel (e.g. <code>https://youtube.com/@MrBeast</code>), a specific video, a Substack newsletter post, a Medium article, or a blog post to begin.
-          </p>
-
-          <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '8px' }}>
-              Channel or Content Link (URL)
-            </label>
-            <input 
-              type="url"
-              required
-              value={contentUrl}
-              onChange={e => setContentUrl(e.target.value)}
-              placeholder="https://www.youtube.com/@MrBeast"
-              style={{ width: '100%', padding: '14px 16px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '14px', transition: 'all 0.3s ease' }}
-            />
-            <span style={{ display: 'block', fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '8px' }}>
-              Pasting a YouTube channel URL will automatically import the latest 5 videos using the YouTube Data API.
-            </span>
+      {step === 'landing' ? (
+        <div className="animate-fade-in">
+          {/* Hero Visual Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '48px' }}>
+            <div className="glass-card" style={{ padding: '24px', borderTop: '2px solid var(--color-primary)' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 8px 0' }}>Multi-Channel Normalization</h3>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
+                Compare articles, videos, newsletters, and social posts on a level playing field using percentile scoring.
+              </p>
+            </div>
+            <div className="glass-card" style={{ padding: '24px', borderTop: '2px solid var(--color-secondary)' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 8px 0' }}>Organic Search Gap Analysis</h3>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
+                Identify search keywords that bring impressions but zero clicks, automatically flagging opportunities to capture traffic.
+              </p>
+            </div>
+            <div className="glass-card" style={{ padding: '24px', borderTop: '2px solid var(--color-success)' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 8px 0' }}>Gemini Editorial Intelligence</h3>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
+                Leverage Gemini to automatically output high-impact action recommendations: Continue, Stop, or Create.
+              </p>
+            </div>
           </div>
 
-          <button 
-            type="submit" 
-            disabled={loading}
-            className="glow-btn glow-btn-primary"
-            style={{ padding: '14px', justifyContent: 'center', fontWeight: 600, fontSize: '15px' }}
+          {/* Launch the App Action Button */}
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <button
+              onClick={() => setStep('import')}
+              className="glow-btn glow-btn-primary"
+              style={{ padding: '16px 48px', fontWeight: 700, fontSize: '18px', borderRadius: '12px' }}
+            >
+              Launch the App
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="animate-fade-in" style={{ position: 'relative' }}>
+          {/* Back button */}
+          <button
+            onClick={() => setStep('landing')}
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              color: 'var(--color-text-muted)', 
+              cursor: 'pointer', 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              fontSize: '14px', 
+              marginBottom: '24px',
+              padding: '8px 12px',
+              borderRadius: '8px',
+              transition: 'color 0.2s'
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--color-text-muted)'}
           >
-            {loading ? 'Importing Content...' : 'Import & Build Dashboard'}
+            ← Back to Landing
           </button>
-        </form>
 
-        {/* Setup Logs & Status */}
-        {statusLog && (
-          <div style={{ marginTop: '20px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', padding: '12px 16px', borderRadius: '6px', fontSize: '12px', fontFamily: 'monospace', color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="animate-pulse" style={{ width: '8px', height: '8px', background: 'var(--color-primary)', borderRadius: '50%' }}></span>
-            <span>{statusLog}</span>
+          {/* Main Single-Step Onboarding Form */}
+          <div className="glass-card" style={{ padding: '40px', maxWidth: '640px', margin: '0 auto', border: '1px solid rgba(255,255,255,0.08)' }}>
+            
+            <form onSubmit={handleScrapeFirstUrl} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <h2 style={{ fontSize: '22px', fontWeight: 700, margin: 0, fontFamily: 'var(--font-display)' }}>
+                Import Your Content
+              </h2>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '13px', margin: 0, lineHeight: '1.6' }}>
+                Paste the URL of your publication, blog, channel, or article below to initialize the intelligence dashboard and analyze performance metrics.
+              </p>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '8px' }}>
+                  Content URL
+                </label>
+                <input 
+                  type="url"
+                  required
+                  value={contentUrl}
+                  onChange={e => setContentUrl(e.target.value)}
+                  placeholder="https://example.com/your-content-link"
+                  style={{ width: '100%', padding: '14px 16px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '14px', transition: 'all 0.3s ease' }}
+                />
+                <span style={{ display: 'block', fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '8px' }}>
+                  Enter any publication, article, feed, or channel link to parse metadata and build the dashboard.
+                </span>
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={loading}
+                className="glow-btn glow-btn-primary"
+                style={{ padding: '14px', justifyContent: 'center', fontWeight: 600, fontSize: '15px' }}
+              >
+                {loading ? 'Importing Content...' : 'Import & Build Dashboard'}
+              </button>
+            </form>
+
+            {/* Setup Logs & Status */}
+            {statusLog && (
+              <div style={{ marginTop: '20px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', padding: '12px 16px', borderRadius: '6px', fontSize: '12px', fontFamily: 'monospace', color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="animate-pulse" style={{ width: '8px', height: '8px', background: 'var(--color-primary)', borderRadius: '50%' }}></span>
+                <span>{statusLog}</span>
+              </div>
+            )}
+
+            {successMsg && (
+              <div style={{ marginTop: '20px', background: 'var(--color-success-bg)', border: '1px solid var(--color-success)', padding: '12px 16px', borderRadius: '6px', fontSize: '13px', color: '#fff', fontWeight: 500 }}>
+                {successMsg}
+              </div>
+            )}
+
+            {errorMsg && (
+              <div style={{ marginTop: '20px', background: 'var(--color-error-bg)', border: '1px solid var(--color-error)', padding: '12px 16px', borderRadius: '6px', fontSize: '13px', color: '#fff' }}>
+                <strong style={{ display: 'block', marginBottom: '4px' }}>Import Failed:</strong>
+                <pre style={{ margin: 0, fontSize: '11px', whiteSpace: 'pre-wrap', fontFamily: 'monospace', opacity: 0.9 }}>{errorMsg}</pre>
+              </div>
+            )}
+
           </div>
-        )}
-
-        {successMsg && (
-          <div style={{ marginTop: '20px', background: 'var(--color-success-bg)', border: '1px solid var(--color-success)', padding: '12px 16px', borderRadius: '6px', fontSize: '13px', color: '#fff', fontWeight: 500 }}>
-            {successMsg}
-          </div>
-        )}
-
-        {errorMsg && (
-          <div style={{ marginTop: '20px', background: 'var(--color-error-bg)', border: '1px solid var(--color-error)', padding: '12px 16px', borderRadius: '6px', fontSize: '13px', color: '#fff' }}>
-            <strong style={{ display: 'block', marginBottom: '4px' }}>Import Failed:</strong>
-            <pre style={{ margin: 0, fontSize: '11px', whiteSpace: 'pre-wrap', fontFamily: 'monospace', opacity: 0.9 }}>{errorMsg}</pre>
-          </div>
-        )}
-
-      </div>
+        </div>
+      )}
       
     </div>
   );
