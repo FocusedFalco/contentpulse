@@ -124,7 +124,7 @@ export default function SettingsPage() {
             className="glow-btn"
             style={{ width: '100%', justifyContent: 'center', border: '1px solid var(--color-error)', color: 'var(--color-error)', background: 'var(--color-error-bg)', padding: '12px' }}
           >
-            {seeding ? 'Wiping...' : '⚠️ Wipe & Reset Database'}
+            {seeding ? 'Wiping...' : 'Wipe & Reset Database'}
           </button>
 
           {seedResult && (

@@ -171,7 +171,7 @@ export default function ReportsPage() {
             className="glow-btn glow-btn-primary"
             style={{ width: '100%', justifyContent: 'center', padding: '12px' }}
           >
-            {generating ? 'Generating...' : '✍️ Generate New Report'}
+            {generating ? 'Generating...' : 'Generate New Report'}
           </button>
 
           <div className="glass-card" style={{ padding: '20px' }}>
@@ -291,7 +291,6 @@ export default function ReportsPage() {
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', height: '400px', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '40px' }}>
-                  <div style={{ fontSize: '64px', marginBottom: '24px' }}>✍️</div>
                   <h3 style={{ fontSize: '20px', fontWeight: 700 }}>No Strategy Reports Found</h3>
                   <p style={{ color: 'var(--color-text-muted)', maxWidth: '400px', fontSize: '14px', marginTop: '8px', lineHeight: '1.6' }}>
                     Generate your first report to trigger the ContentPulse Analysis Engine and let Gemini write a decision-ready editorial strategy.

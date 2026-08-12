@@ -74,10 +74,10 @@ export default function DashboardView({ data }: DashboardViewProps) {
             className="glow-btn"
             style={{ minWidth: '130px', justifyContent: 'center' }}
           >
-            {syncing ? 'Syncing...' : '🔄 Sync Today'}
+            {syncing ? 'Syncing...' : 'Sync Today'}
           </button>
           <Link href="/reports" className="glow-btn glow-btn-primary">
-            ✍️ Generate Report
+            Generate Report
           </Link>
         </div>
       </header>
@@ -117,7 +117,6 @@ export default function DashboardView({ data }: DashboardViewProps) {
         <div className="glass-card" style={{ padding: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '14px', color: 'var(--color-text-muted)', fontWeight: 500 }}>Total Views</span>
-            <span style={{ fontSize: '20px' }}>📈</span>
           </div>
           <h2 style={{ fontSize: '32px', fontWeight: 800, marginTop: '8px', fontFamily: 'var(--font-display)' }}>
             {totalViews.toLocaleString()}
@@ -130,7 +129,6 @@ export default function DashboardView({ data }: DashboardViewProps) {
         <div className="glass-card" style={{ padding: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '14px', color: 'var(--color-text-muted)', fontWeight: 500 }}>Conversions</span>
-            <span style={{ fontSize: '20px' }}>🎯</span>
           </div>
           <h2 style={{ fontSize: '32px', fontWeight: 800, marginTop: '8px', fontFamily: 'var(--font-display)' }}>
             {totalConversions.toLocaleString()}
@@ -143,7 +141,6 @@ export default function DashboardView({ data }: DashboardViewProps) {
         <div className="glass-card" style={{ padding: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '14px', color: 'var(--color-text-muted)', fontWeight: 500 }}>Conversion Rate</span>
-            <span style={{ fontSize: '20px' }}>⚡</span>
           </div>
           <h2 style={{ fontSize: '32px', fontWeight: 800, marginTop: '8px', fontFamily: 'var(--font-display)' }}>
             {avgConversionRate.toFixed(2)}%
@@ -156,7 +153,6 @@ export default function DashboardView({ data }: DashboardViewProps) {
         <div className="glass-card" style={{ padding: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '14px', color: 'var(--color-text-muted)', fontWeight: 500 }}>Content Pieces</span>
-            <span style={{ fontSize: '20px' }}>📁</span>
           </div>
           <h2 style={{ fontSize: '32px', fontWeight: 800, marginTop: '8px', fontFamily: 'var(--font-display)' }}>
             {totalPieces}
@@ -174,9 +170,8 @@ export default function DashboardView({ data }: DashboardViewProps) {
       <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '40px' }}>
         {/* Continue Cards */}
         <div className="glass-card" style={{ padding: '24px', borderLeft: '4px solid var(--color-success)', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', right: '-15px', top: '-15px', fontSize: '80px', opacity: 0.05 }}>🟢</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-success)', fontWeight: 700, fontFamily: 'var(--font-display)', fontSize: '16px' }}>
-            <span>🟢</span> CONTINUE & AMPLIFY
+            CONTINUE & AMPLIFY
           </div>
           {data.recommendations.filter(r => r.action === 'CONTINUE').map((rec, i) => (
             <div key={i} style={{ marginTop: '16px' }}>
@@ -190,9 +185,8 @@ export default function DashboardView({ data }: DashboardViewProps) {
 
         {/* Stop Cards */}
         <div className="glass-card" style={{ padding: '24px', borderLeft: '4px solid var(--color-error)', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', right: '-15px', top: '-15px', fontSize: '80px', opacity: 0.05 }}>🔴</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-error)', fontWeight: 700, fontFamily: 'var(--font-display)', fontSize: '16px' }}>
-            <span>🔴</span> STOP & REALLOCATE
+            STOP & REALLOCATE
           </div>
           {data.recommendations.filter(r => r.action === 'STOP').map((rec, i) => (
             <div key={i} style={{ marginTop: '16px' }}>
@@ -206,9 +200,8 @@ export default function DashboardView({ data }: DashboardViewProps) {
 
         {/* Create Cards */}
         <div className="glass-card" style={{ padding: '24px', borderLeft: '4px solid var(--color-primary)', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', right: '-15px', top: '-15px', fontSize: '80px', opacity: 0.05 }}>🔵</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)', fontWeight: 700, fontFamily: 'var(--font-display)', fontSize: '16px' }}>
-            <span>🔵</span> CREATE (ORGANIC GAPS)
+            CREATE (ORGANIC GAPS)
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '14px' }}>
             {data.recommendations.filter(r => r.action === 'CREATE').slice(0, 2).map((rec, i) => (
@@ -247,7 +240,7 @@ export default function DashboardView({ data }: DashboardViewProps) {
                       </span>
                       {!t.isEligible && (
                         <span style={{ fontSize: '10px', background: 'rgba(255,255,255,0.05)', color: 'var(--color-text-muted)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
-                          ⚠️ Low Sample
+                          Low Sample
                         </span>
                       )}
                     </div>
@@ -415,15 +408,15 @@ export default function DashboardView({ data }: DashboardViewProps) {
               const getPlatformDetails = (format: string) => {
                 switch (format.toLowerCase()) {
                   case 'video':
-                    return { label: 'YouTube Video Sync', icon: '🎥', platform: 'YouTube Integration' };
+                    return { label: 'YouTube Video Sync', platform: 'YouTube Integration' };
                   case 'article':
-                    return { label: 'Web Pages (GA4)', icon: '🌐', platform: 'Google Analytics 4' };
+                    return { label: 'Web Pages (GA4)', platform: 'Google Analytics 4' };
                   case 'newsletter':
-                    return { label: 'Email Newsletter', icon: '📧', platform: 'Substack / Medium' };
+                    return { label: 'Email Newsletter', platform: 'Substack / Medium' };
                   case 'social_post':
-                    return { label: 'Social Channels', icon: '📱', platform: 'X & LinkedIn' };
+                    return { label: 'Social Channels', platform: 'X & LinkedIn' };
                   default:
-                    return { label: format.replace('_', ' '), icon: '📄', platform: 'Direct Import' };
+                    return { label: format.replace('_', ' '), platform: 'Direct Import' };
                 }
               };
               
@@ -433,7 +426,7 @@ export default function DashboardView({ data }: DashboardViewProps) {
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                   <div>
                     <h4 style={{ fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span>{platform.icon}</span> {platform.label}
+                      {platform.label}
                     </h4>
                     <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'block', marginTop: '2px' }}>
                       Platform: <strong style={{ color: 'var(--color-text)' }}>{platform.platform}</strong>

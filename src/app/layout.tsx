@@ -34,13 +34,13 @@ export default function RootLayout({
 
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
               <Link href="/" className="nav-link-item">
-                <span style={{ marginRight: '10px' }}>📊</span> Dashboard
+                Dashboard
               </Link>
               <Link href="/reports" className="nav-link-item">
-                <span style={{ marginRight: '10px' }}>✍️</span> Editorial Reports
+                Editorial Reports
               </Link>
               <Link href="/settings" className="nav-link-item">
-                <span style={{ marginRight: '10px' }}>⚙️</span> Sync & Settings
+                Sync & Settings
               </Link>
             </nav>
 

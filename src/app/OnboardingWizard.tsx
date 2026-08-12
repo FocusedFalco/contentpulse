@@ -64,7 +64,6 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
       {/* Brand Header */}
       <header style={{ textAlign: 'center', marginBottom: '48px' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-          <span style={{ fontSize: '32px' }}>⚡</span>
           <span style={{ fontSize: '28px', fontWeight: 800, letterSpacing: '-0.5px', background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             ContentPulse
           </span>
@@ -80,21 +79,18 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
       {/* Hero Visual Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '48px' }}>
         <div className="glass-card" style={{ padding: '24px', borderTop: '2px solid var(--color-primary)' }}>
-          <div style={{ fontSize: '24px', marginBottom: '12px' }}>📊</div>
           <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 8px 0' }}>Multi-Channel Normalization</h3>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
             Compare articles, YouTube videos, newsletters, and social posts on a level playing field using percentile scoring.
           </p>
         </div>
         <div className="glass-card" style={{ padding: '24px', borderTop: '2px solid var(--color-secondary)' }}>
-          <div style={{ fontSize: '24px', marginBottom: '12px' }}>🔍</div>
           <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 8px 0' }}>Organic Search Gap Analysis</h3>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
             Identify search keywords that bring impressions but zero clicks, automatically flagging opportunities to capture traffic.
           </p>
         </div>
         <div className="glass-card" style={{ padding: '24px', borderTop: '2px solid var(--color-success)' }}>
-          <div style={{ fontSize: '24px', marginBottom: '12px' }}>🤖</div>
           <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 8px 0' }}>Gemini Editorial Intelligence</h3>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
             Leverage Gemini 2.5 Flash to automatically output high-impact action recommendations: Continue, Stop, or Create.
@@ -126,7 +122,7 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
               style={{ width: '100%', padding: '14px 16px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '14px', transition: 'all 0.3s ease' }}
             />
             <span style={{ display: 'block', fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '8px' }}>
-              💡 Pasting a YouTube channel URL will automatically import the latest 5 videos using the YouTube Data API.
+              Pasting a YouTube channel URL will automatically import the latest 5 videos using the YouTube Data API.
             </span>
           </div>
 
@@ -136,7 +132,7 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
             className="glow-btn glow-btn-primary"
             style={{ padding: '14px', justifyContent: 'center', fontWeight: 600, fontSize: '15px' }}
           >
-            {loading ? 'Importing Content...' : 'Import & Build Dashboard ➔'}
+            {loading ? 'Importing Content...' : 'Import & Build Dashboard'}
           </button>
         </form>
 
@@ -150,13 +146,13 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
 
         {successMsg && (
           <div style={{ marginTop: '20px', background: 'var(--color-success-bg)', border: '1px solid var(--color-success)', padding: '12px 16px', borderRadius: '6px', fontSize: '13px', color: '#fff', fontWeight: 500 }}>
-            🎉 {successMsg}
+            {successMsg}
           </div>
         )}
 
         {errorMsg && (
           <div style={{ marginTop: '20px', background: 'var(--color-error-bg)', border: '1px solid var(--color-error)', padding: '12px 16px', borderRadius: '6px', fontSize: '13px', color: '#fff' }}>
-            <strong style={{ display: 'block', marginBottom: '4px' }}>⚠️ Import Failed:</strong>
+            <strong style={{ display: 'block', marginBottom: '4px' }}>Import Failed:</strong>
             <pre style={{ margin: 0, fontSize: '11px', whiteSpace: 'pre-wrap', fontFamily: 'monospace', opacity: 0.9 }}>{errorMsg}</pre>
           </div>
         )}
