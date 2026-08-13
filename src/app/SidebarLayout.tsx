@@ -88,31 +88,6 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
               }}></span>
             )}
           </Link>
-
-          <Link href="/settings" style={{
-            fontSize: '14px',
-            fontWeight: 600,
-            color: isSettings ? '#ffffff' : '#a0aec0',
-            textDecoration: 'none',
-            position: 'relative',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            transition: 'color 0.2s'
-          }}>
-            Analytics
-            {isSettings && (
-              <span style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: '2px',
-                background: '#ffffff',
-                borderRadius: '2px'
-              }}></span>
-            )}
-          </Link>
         </nav>
 
         {/* Right: Actions */}

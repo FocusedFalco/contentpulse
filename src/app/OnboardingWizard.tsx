@@ -131,7 +131,6 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
         <nav style={{ display: 'flex', gap: '32px' }}>
           <span style={{ fontSize: '14px', color: '#a0aec0', cursor: 'pointer', transition: 'color 0.2s' }} onClick={handleOpenImport}>Dashboard</span>
           <span style={{ fontSize: '14px', color: '#a0aec0', cursor: 'pointer', transition: 'color 0.2s' }} onClick={handleOpenImport}>Reports</span>
-          <span style={{ fontSize: '14px', color: '#a0aec0', cursor: 'pointer', transition: 'color 0.2s' }} onClick={handleOpenImport}>Analytics</span>
         </nav>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
