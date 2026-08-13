@@ -214,9 +214,9 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
           width: '32px',
           height: '18px',
           borderRadius: '10px',
-          background: 'linear-gradient(135deg, #a78bfa, #6d28d9)',
+          background: 'linear-gradient(135deg, #22d3ee, #0891b2)',
           transform: 'rotate(-25deg)',
-          boxShadow: '0 0 15px rgba(167, 139, 250, 0.4)'
+          boxShadow: '0 0 15px rgba(34, 211, 238, 0.4)'
         }}></div>
 
         {/* Lightbulb Circle (Right of Headline) */}
@@ -227,12 +227,12 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
           width: '56px',
           height: '56px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle at 30% 30%, #5c3db7, #1e0d4f)',
-          boxShadow: '0 0 25px rgba(139, 92, 246, 0.6), inset 0 2px 4px rgba(255,255,255,0.2)',
+          background: 'radial-gradient(circle at 30% 30%, #1e40af, #1e1b4b)',
+          boxShadow: '0 0 25px rgba(59, 130, 246, 0.6), inset 0 2px 4px rgba(255,255,255,0.2)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#c084fc'
+          color: '#60a5fa'
         }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5 5 0 0 0 8 8c0 1 .4 2.5 1.5 3.5.7.8 1.3 1.5 1.5 2.5"></path>
@@ -321,16 +321,16 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
             alignItems: 'center',
             gap: '8px',
             background: 'rgba(255, 255, 255, 0.02)',
-            border: '1px solid rgba(99, 102, 241, 0.35)',
+            border: '1px solid rgba(59, 130, 246, 0.35)',
             borderRadius: '30px',
             padding: '6px 16px',
             fontSize: '12px',
             fontWeight: 600,
-            color: '#c084fc',
+            color: '#60a5fa',
             letterSpacing: '0.05em',
-            boxShadow: '0 0 15px rgba(99, 102, 241, 0.15)'
+            boxShadow: '0 0 15px rgba(59, 130, 246, 0.15)'
           }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#818cf8', display: 'inline-block', boxShadow: '0 0 8px #818cf8' }}></span>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#3b82f6', display: 'inline-block', boxShadow: '0 0 8px #3b82f6' }}></span>
             AI-Powered Insights
           </div>
         </div>
@@ -372,7 +372,7 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
               fontSize: '15px', 
               fontWeight: 600, 
               borderRadius: '8px',
-              boxShadow: '0 4px 20px rgba(99, 102, 241, 0.3)'
+              boxShadow: '0 4px 20px rgba(59, 130, 246, 0.3)'
             }}
           >
             Start Free Trial
@@ -447,9 +447,9 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
                 width: '40px', 
                 height: '40px', 
                 borderRadius: '8px', 
-                background: 'rgba(99, 102, 241, 0.08)', 
-                border: '1px solid rgba(99, 102, 241, 0.25)', 
-                color: '#818cf8',
+                background: 'rgba(59, 130, 246, 0.08)', 
+                border: '1px solid rgba(59, 130, 246, 0.25)', 
+                color: '#3b82f6',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -490,9 +490,9 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
                   width: '40px', 
                   height: '40px', 
                   borderRadius: '8px', 
-                  background: 'rgba(99, 102, 241, 0.08)', 
-                  border: '1px solid rgba(99, 102, 241, 0.25)', 
-                  color: '#818cf8',
+                  background: 'rgba(59, 130, 246, 0.08)', 
+                  border: '1px solid rgba(59, 130, 246, 0.25)', 
+                  color: '#3b82f6',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
@@ -560,9 +560,9 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
                 width: '40px', 
                 height: '40px', 
                 borderRadius: '8px', 
-                background: 'rgba(99, 102, 241, 0.08)', 
-                border: '1px solid rgba(99, 102, 241, 0.25)', 
-                color: '#818cf8',
+                background: 'rgba(59, 130, 246, 0.08)', 
+                border: '1px solid rgba(59, 130, 246, 0.25)', 
+                color: '#3b82f6',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -609,7 +609,7 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
             {/* Right side Monospace Terminal Panel Graphic */}
             <div style={{
               background: 'rgba(5, 7, 15, 0.85)',
-              border: '1px solid rgba(99, 102, 241, 0.2)',
+              border: '1px solid rgba(59, 130, 246, 0.2)',
               borderRadius: '8px',
               padding: '24px',
               fontFamily: 'monospace',
@@ -626,7 +626,7 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
             }}>
               
               {/* Monospace Code Lines */}
-              <div style={{ color: '#6366f1', opacity: 0.8, letterSpacing: '0.05em' }}>
+              <div style={{ color: '#3b82f6', opacity: 0.8, letterSpacing: '0.05em' }}>
                 INITIATING NLP PROTOCOL...
               </div>
 
@@ -636,7 +636,7 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
                 {/* Simulated Data flow line */}
                 <svg width="100%" height="40" style={{ position: 'absolute', top: '10px', left: 0, zIndex: 0, opacity: 0.3 }}>
                   <line x1="0" y1="20" x2="100%" y2="20" stroke="#4f5e80" strokeWidth="1" strokeDasharray="4 4" />
-                  <path d="M 0,20 Q 100,5 200,20 T 400,20" fill="none" stroke="#6366f1" strokeWidth="1.5" className="animate-draw-flow" />
+                  <path d="M 0,20 Q 100,5 200,20 T 400,20" fill="none" stroke="#3b82f6" strokeWidth="1.5" className="animate-draw-flow" />
                 </svg>
 
                 {/* Glowing bulb core */}
@@ -644,14 +644,14 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
                   width: '40px',
                   height: '40px',
                   borderRadius: '50%',
-                  background: 'rgba(99, 102, 241, 0.15)',
-                  border: '1px solid rgba(99, 102, 241, 0.4)',
+                  background: 'rgba(59, 130, 246, 0.15)',
+                  border: '1px solid rgba(59, 130, 246, 0.4)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#818cf8',
+                  color: '#3b82f6',
                   zIndex: 2,
-                  boxShadow: '0 0 20px rgba(99, 102, 241, 0.3)'
+                  boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)'
                 }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5 5 0 0 0 8 8c0 1 .4 2.5 1.5 3.5.7.8 1.3 1.5 1.5 2.5"></path>
@@ -714,7 +714,7 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
       {!cookiesDismissed && (
         <div className="cookie-banner">
           <span>This website uses cookies. </span>
-          <span style={{ textDecoration: 'underline', cursor: 'pointer', color: '#a78bfa', marginLeft: '-10px' }} onClick={handleOpenImport}>Learn More</span>
+          <span style={{ textDecoration: 'underline', cursor: 'pointer', color: '#38bdf8', marginLeft: '-10px' }} onClick={handleOpenImport}>Learn More</span>
           <button className="cookie-banner-btn" onClick={handleAcceptCookies}>Accept</button>
           <button className="cookie-banner-btn-secondary" onClick={handleDenyCookies}>Deny</button>
         </div>
@@ -762,7 +762,7 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
                     outline: 'none',
                     transition: 'all 0.3s ease' 
                   }}
-                  onFocus={e => e.currentTarget.style.borderColor = '#6366f1'}
+                  onFocus={e => e.currentTarget.style.borderColor = '#3b82f6'}
                   onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
                 />
                 <span style={{ display: 'block', fontSize: '11px', color: '#4f5e80', marginTop: '8px' }}>
@@ -821,7 +821,7 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
                 alignItems: 'center', 
                 gap: '12px' 
               }}>
-                <span className="animate-pulse" style={{ width: '8px', height: '8px', background: '#6366f1', borderRadius: '50%', boxShadow: '0 0 10px #6366f1' }}></span>
+                <span className="animate-pulse" style={{ width: '8px', height: '8px', background: '#3b82f6', borderRadius: '50%', boxShadow: '0 0 10px #3b82f6' }}></span>
                 <span>{statusLog}</span>
               </div>
             )}
