@@ -28,7 +28,25 @@ export async function seedDatabase(): Promise<{ success: boolean; log: string }>
       { topic: 'Next.js Best Practices', parent: 'Web Development', firstPub: '2026-03-01' },
       { topic: 'SaaS Marketing', parent: 'Business', firstPub: '2026-01-10' },
       { topic: 'Web Performance', parent: 'Web Development', firstPub: '2026-04-12' },
-      { topic: 'Career in Tech', parent: 'Career', firstPub: '2026-02-01' }
+      { topic: 'Career in Tech', parent: 'Career', firstPub: '2026-02-01' },
+      { topic: 'Entertainment', parent: 'Entertainment', firstPub: '2026-01-05' },
+      { topic: 'Gaming', parent: 'Entertainment', firstPub: '2026-01-12' },
+      { topic: 'Comedy & Humor', parent: 'Entertainment', firstPub: '2026-02-20' },
+      { topic: 'Education & Science', parent: 'Education', firstPub: '2026-03-10' },
+      { topic: 'Tech Reviews', parent: 'Technology', firstPub: '2026-02-18' },
+      { topic: 'Lifestyle & Vlogs', parent: 'Lifestyle', firstPub: '2026-01-25' },
+      { topic: 'Charity & Philanthropy', parent: 'General', firstPub: '2026-03-05' },
+      { topic: 'General Entertainment', parent: 'Entertainment', firstPub: '2026-01-01' },
+      { topic: 'Product Management', parent: 'Business', firstPub: '2026-04-01' },
+      { topic: 'Design & UX', parent: 'Technology', firstPub: '2026-03-15' },
+      { topic: 'Finance & Investing', parent: 'Business', firstPub: '2026-02-22' },
+      { topic: 'Health & Wellness', parent: 'Lifestyle', firstPub: '2026-01-30' },
+      { topic: 'Travel & Culture', parent: 'Lifestyle', firstPub: '2026-04-05' },
+      { topic: 'Food & Culinary', parent: 'Lifestyle', firstPub: '2026-02-28' },
+      { topic: 'Music & Performing Arts', parent: 'Entertainment', firstPub: '2026-03-20' },
+      { topic: 'Startups & Venture Capital', parent: 'Business', firstPub: '2026-01-15' },
+      { topic: 'Software Architecture', parent: 'Technology', firstPub: '2026-02-10' },
+      { topic: 'Cloud Computing & DevOps', parent: 'Technology', firstPub: '2026-03-25' }
     ];
     for (const t of topics) {
       await query(

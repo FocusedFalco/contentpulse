@@ -82,7 +82,6 @@ CREATE TABLE IF NOT EXISTS reports (
     metrics_summary JSONB NOT NULL
 );
 
--- Seed Reference Lookup Data
 INSERT INTO content_taxonomy (topic) VALUES 
 ('AI Engineering'), 
 ('Next.js Best Practices'), 
@@ -96,7 +95,17 @@ INSERT INTO content_taxonomy (topic) VALUES
 ('Tech Reviews'),
 ('Lifestyle & Vlogs'),
 ('Charity & Philanthropy'),
-('General Entertainment')
+('General Entertainment'),
+('Product Management'),
+('Design & UX'),
+('Finance & Investing'),
+('Health & Wellness'),
+('Travel & Culture'),
+('Food & Culinary'),
+('Music & Performing Arts'),
+('Startups & Venture Capital'),
+('Software Architecture'),
+('Cloud Computing & DevOps')
 ON CONFLICT DO NOTHING;
 
 INSERT INTO audience_segments (segment_id, name) VALUES 

@@ -237,7 +237,20 @@ export async function classifyTopicWithGemini(
       'Gaming',
       'Comedy & Humor',
       'Education & Science',
-      'Tech Reviews'
+      'Tech Reviews',
+      'Lifestyle & Vlogs',
+      'Charity & Philanthropy',
+      'General Entertainment',
+      'Product Management',
+      'Design & UX',
+      'Finance & Investing',
+      'Health & Wellness',
+      'Travel & Culture',
+      'Food & Culinary',
+      'Music & Performing Arts',
+      'Startups & Venture Capital',
+      'Software Architecture',
+      'Cloud Computing & DevOps'
     ];
   }
 
@@ -307,16 +320,35 @@ Category:`;
     const json = await response.json();
     const result = json.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
-    if (result && allowedTopics.includes(result)) {
-      console.log(`Gemini successfully classified "${title}" -> "${result}"`);
-      return result;
-    }
-
-    // Attempt fuzzy match in case Gemini returned extra text
     if (result) {
+      // 1. Direct match check
+      if (allowedTopics.includes(result)) {
+        console.log(`Gemini successfully classified "${title}" -> "${result}"`);
+        return result;
+      }
+
+      // 2. Clean formatting (strip markdown, quotes, trailing periods) and check exact clean match
+      const cleanResult = result.replace(/[*#`"\.]/g, '').trim().toLowerCase();
+      const exactCleanMatch = allowedTopics.find(t => t.toLowerCase() === cleanResult);
+      if (exactCleanMatch) {
+        console.log(`Gemini exact clean match classified "${title}" -> "${exactCleanMatch}"`);
+        return exactCleanMatch;
+      }
+
+      // 3. Check for partial matches (if output contains topic, or topic contains output)
       for (const topic of allowedTopics) {
-        if (result.toLowerCase().includes(topic.toLowerCase())) {
-          console.log(`Gemini fuzzy match classified "${title}" -> "${topic}"`);
+        const cleanTopic = topic.toLowerCase();
+        
+        // If Gemini output contains the full topic (e.g., "This belongs to Next.js Best Practices")
+        if (cleanResult.includes(cleanTopic)) {
+          console.log(`Gemini fuzzy match (contains) classified "${title}" -> "${topic}" (raw: "${result}")`);
+          return topic;
+        }
+
+        // If the topic contains the Gemini output (e.g., "Charity" matches "Charity & Philanthropy")
+        // Length check prevents matching short common words like "in" or "and"
+        if (cleanResult.length >= 3 && cleanTopic.includes(cleanResult)) {
+          console.log(`Gemini fuzzy match (contained in) classified "${title}" -> "${topic}" (raw: "${result}")`);
           return topic;
         }
       }
