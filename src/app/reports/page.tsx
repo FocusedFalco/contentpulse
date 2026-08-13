@@ -231,7 +231,7 @@ export default function ReportsPage() {
           
           {/* Progress Modal Overlay for Generation */}
           {generating && (
-            <div className="glass-card animate-fade-in" style={{ padding: '40px', background: 'rgba(7, 10, 22, 0.95)', border: '1px solid var(--color-primary)', display: 'flex', flexDirection: 'column', gap: '24px', minHeight: '380px', justifyContent: 'center' }}>
+            <div className="glass-card animate-fade-in" style={{ padding: '40px', background: 'rgba(0, 0, 0, 0.95)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '24px', minHeight: '380px', justifyContent: 'center' }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ display: 'inline-block', width: '40px', height: '40px', border: '4px solid var(--color-primary-glow)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '16px' }} />
                 <h3 style={{ fontSize: '20px', fontFamily: 'var(--font-display)' }}>Synthesizing Editorial Intelligence</h3>
@@ -260,7 +260,7 @@ export default function ReportsPage() {
 
           {/* Normal Report Viewer */}
           {!generating && (
-            <div className="glass-card" style={{ padding: '40px', minHeight: '520px', background: 'rgba(15, 23, 42, 0.45)' }}>
+            <div className="glass-card" style={{ padding: '40px', minHeight: '520px', background: 'rgba(9, 9, 11, 0.75)' }}>
               {loading ? (
                 <div style={{ display: 'flex', flexDirection: 'column', height: '300px', justifyContent: 'center', alignItems: 'center' }}>
                   <div style={{ display: 'inline-block', width: '32px', height: '32px', border: '3px solid rgba(255,255,255,0.05)', borderTopColor: 'var(--color-secondary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
