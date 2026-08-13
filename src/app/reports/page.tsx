@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { marked } from 'marked';
+import SidebarLayout from '../SidebarLayout';
 
 interface ReportArchiveItem {
   id: number;
@@ -153,7 +154,8 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="animate-fade-in">
+    <SidebarLayout>
+      <div className="animate-fade-in">
       <header style={{ marginBottom: '32px' }}>
         <h1 style={{ fontSize: '32px', fontWeight: 700, margin: 0 }}>Editorial Strategy Reports</h1>
         <p style={{ color: 'var(--color-text-muted)', fontSize: '15px', marginTop: '4px' }}>
@@ -394,6 +396,7 @@ export default function ReportsPage() {
           border-color: var(--color-primary);
         }
       `}} />
-    </div>
+      </div>
+    </SidebarLayout>
   );
 }

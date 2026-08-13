@@ -2,6 +2,7 @@ import { runAnalysis } from '@/lib/analysis/analysis';
 import { checkConnection, query } from '@/lib/db/db';
 import DashboardView from './DashboardView';
 import OnboardingWizard from './OnboardingWizard';
+import SidebarLayout from './SidebarLayout';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,7 +28,11 @@ export default async function DashboardPage() {
   // Load and render actual database aggregations
   try {
     const analysisData = await runAnalysis();
-    return <DashboardView data={analysisData} />;
+    return (
+      <SidebarLayout>
+        <DashboardView data={analysisData} />
+      </SidebarLayout>
+    );
   } catch (err: any) {
     // Fallback to onboarding if connection breaks or database is corrupted
     return <OnboardingWizard initialError={err?.message || String(err)} />;

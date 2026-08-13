@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import SidebarLayout from '../SidebarLayout';
 
 export default function SettingsPage() {
   // Ingestion seed state
@@ -63,7 +64,8 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="animate-fade-in">
+    <SidebarLayout>
+      <div className="animate-fade-in">
       <header style={{ marginBottom: '32px' }}>
         <h1 style={{ fontSize: '32px', fontWeight: 700, margin: 0 }}>Sync & Settings</h1>
         <p style={{ color: 'var(--color-text-muted)', fontSize: '15px', marginTop: '4px' }}>
@@ -135,6 +137,7 @@ export default function SettingsPage() {
         </section>
 
       </div>
-    </div>
+      </div>
+    </SidebarLayout>
   );
 }
