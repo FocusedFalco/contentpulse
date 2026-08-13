@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
+import { checkConnection, query } from "@/lib/db/db";
 
 export const metadata: Metadata = {
   title: "ContentPulse | Content Performance & Editorial Intelligence",
@@ -8,11 +9,37 @@ export const metadata: Metadata = {
   metadataBase: new URL("http://localhost:3000"),
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const conn = await checkConnection();
+
+  let hasRealData = false;
+  if (conn.connected) {
+    try {
+      const res = await query('SELECT COUNT(*) FROM content_items');
+      hasRealData = parseInt(res.rows[0].count, 10) > 0;
+    } catch (err) {
+      // Tables don't exist yet
+      hasRealData = false;
+    }
+  }
+
+  if (!hasRealData) {
+    return (
+      <html lang="en">
+        <head>
+          <title>ContentPulse | Content Performance & Editorial Intelligence</title>
+        </head>
+        <body>
+          {children}
+        </body>
+      </html>
+    );
+  }
+
   return (
     <html lang="en">
       <head>
