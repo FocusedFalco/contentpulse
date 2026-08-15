@@ -506,19 +506,14 @@ export default function SocialChannelPage() {
                         </td>
                         <td style={{ padding: '14px 16px' }}>
                           <span style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
                             padding: '2px 8px',
-                            borderRadius: '12px',
+                            borderRadius: '6px',
                             background: 'rgba(52, 211, 153, 0.1)',
-                            border: '1px solid rgba(52, 211, 153, 0.2)',
                             color: '#34d399',
                             fontSize: '11px',
                             fontWeight: 600
                           }}>
-                            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#34d399' }}></span>
-                            Active Sync
+                            Active
                           </span>
                         </td>
                         <td style={{ padding: '14px 16px', textAlign: 'right' }}>

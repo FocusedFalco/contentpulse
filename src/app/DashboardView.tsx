@@ -268,10 +268,6 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
       {/* 3. Header Title & Context */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '3px 10px', borderRadius: '20px', background: 'var(--color-primary-glow)', border: '1px solid var(--border-color)', color: 'var(--color-primary)', fontSize: '11px', fontWeight: 600, marginBottom: '8px' }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--color-primary)' }}></span>
-            {channelHeader.badge}
-          </div>
           <h1 style={{ fontSize: '28px', fontWeight: 900, letterSpacing: '-0.5px', color: 'var(--color-text)', margin: 0, fontFamily: 'var(--font-display)' }}>
             {channelHeader.title}
           </h1>
