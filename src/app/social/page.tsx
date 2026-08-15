@@ -204,10 +204,6 @@ export default function SocialChannelPage() {
         {/* Header Bar */}
         <header style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.25)', color: '#60a5fa', fontSize: '12px', fontWeight: 600, marginBottom: '10px' }}>
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#60a5fa' }}></span>
-              Social Channel • Active Monitoring
-            </div>
             <h1 style={{ fontSize: '32px', fontWeight: 700, margin: 0, letterSpacing: '-0.5px' }}>Social Channel</h1>
             <p style={{ color: 'var(--color-text-muted)', fontSize: '15px', marginTop: '6px' }}>
               Connect social accounts and handles. Individual post performance and virality metrics are monitored on your dashboard.

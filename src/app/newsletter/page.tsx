@@ -196,10 +196,6 @@ export default function NewsletterChannelPage() {
         {/* Header Bar */}
         <header style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(6, 182, 212, 0.1)', border: '1px solid rgba(6, 182, 212, 0.25)', color: '#22d3ee', fontSize: '12px', fontWeight: 600, marginBottom: '10px' }}>
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22d3ee' }}></span>
-              Newsletter Channel • Active Monitoring
-            </div>
             <h1 style={{ fontSize: '32px', fontWeight: 700, margin: 0, letterSpacing: '-0.5px' }}>Newsletter Channel</h1>
             <p style={{ color: 'var(--color-text-muted)', fontSize: '15px', marginTop: '6px' }}>
               Connect newsletter publications. Track aggregate readership and subscriber conversion across issues.

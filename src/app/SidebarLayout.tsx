@@ -194,8 +194,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                 </svg>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#ffffff' }}>Channels</span>
-                <span style={{ fontSize: '10px', color: '#718096' }}>Active Monitoring</span>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff' }}>Channels</span>
               </div>
             </div>
 
