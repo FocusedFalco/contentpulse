@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 export default function SidebarLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
 
   // Helper to check active nav
   const isDashboard = pathname === '/';
@@ -16,14 +17,33 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
   const isSettings = pathname === '/settings';
   const isProfile = pathname === '/profile';
 
+  useEffect(() => {
+    setMounted(true);
+    const savedTheme = localStorage.getItem('cp_theme');
+    if (savedTheme === 'light') {
+      document.documentElement.classList.add('light-theme');
+      document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+      document.documentElement.classList.remove('light-theme');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
+    const savedDensity = localStorage.getItem('cp_density');
+    if (savedDensity === 'compact') {
+      document.documentElement.classList.add('compact-density');
+    } else {
+      document.documentElement.classList.remove('compact-density');
+    }
+  }, []);
+
   return (
-    <div style={{ background: '#000000', minHeight: '100vh', display: 'flex', flexDirection: 'column', color: '#ffffff', fontFamily: 'var(--font-body)' }}>
+    <div style={{ background: 'var(--bg-base)', minHeight: '100vh', display: 'flex', flexDirection: 'column', color: 'var(--color-text)', fontFamily: 'var(--font-body)' }}>
       
       {/* 1. TOP HEADER BAR */}
-      <header style={{
+      <header className="app-header" style={{
         height: '64px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        background: '#09090b',
+        borderBottom: '1px solid var(--border-color)',
+        background: 'var(--bg-surface)',
         padding: '0 24px',
         display: 'flex',
         justifyContent: 'space-between',
@@ -34,7 +54,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
       }}>
         {/* Left: Brand Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Link href="/" style={{ textDecoration: 'none', color: '#ffffff' }}>
+          <Link href="/" style={{ textDecoration: 'none', color: 'var(--color-text)' }}>
             <span style={{ fontSize: '20px', fontWeight: 800, letterSpacing: '-0.5px' }}>
               ContentPulse
             </span>
@@ -46,7 +66,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
           <Link href="/" style={{
             fontSize: '14px',
             fontWeight: 600,
-            color: isDashboard ? '#ffffff' : '#a0aec0',
+            color: isDashboard ? 'var(--color-text)' : 'var(--color-text-muted)',
             textDecoration: 'none',
             position: 'relative',
             height: '100%',
@@ -62,7 +82,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                 left: 0,
                 right: 0,
                 height: '2px',
-                background: '#ffffff',
+                background: 'var(--color-primary)',
                 borderRadius: '2px'
               }}></span>
             )}
@@ -71,7 +91,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
           <Link href="/reports" style={{
             fontSize: '14px',
             fontWeight: 600,
-            color: isReports ? '#ffffff' : '#a0aec0',
+            color: isReports ? 'var(--color-text)' : 'var(--color-text-muted)',
             textDecoration: 'none',
             position: 'relative',
             height: '100%',
@@ -87,7 +107,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                 left: 0,
                 right: 0,
                 height: '2px',
-                background: '#ffffff',
+                background: 'var(--color-primary)',
                 borderRadius: '2px'
               }}></span>
             )}
@@ -99,7 +119,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
           
           {/* Search bar */}
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <span style={{ position: 'absolute', left: '12px', color: '#718096', display: 'flex', alignItems: 'center' }}>
+            <span style={{ position: 'absolute', left: '12px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -109,23 +129,23 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
               type="text" 
               placeholder="Search..." 
               style={{
-                background: '#18181b',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                background: 'var(--bg-base)',
+                border: '1px solid var(--border-color)',
                 borderRadius: '20px',
                 padding: '6px 12px 6px 34px',
                 fontSize: '13px',
-                color: '#ffffff',
+                color: 'var(--color-text)',
                 outline: 'none',
                 width: '180px',
                 transition: 'all 0.2s'
               }}
-              onFocus={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)'}
-              onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}
+              onFocus={e => e.currentTarget.style.borderColor = 'var(--color-primary)'}
+              onBlur={e => e.currentTarget.style.borderColor = 'var(--border-color)'}
             />
           </div>
 
           {/* Bell Icon */}
-          <button style={{ background: 'transparent', border: 'none', color: '#a0aec0', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          <button style={{ background: 'transparent', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
               <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
@@ -133,7 +153,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
           </button>
           
           {/* Gear settings Icon */}
-          <Link href="/settings" style={{ color: '#a0aec0', display: 'flex', alignItems: 'center' }}>
+          <Link href="/settings" style={{ color: isSettings ? 'var(--color-primary)' : 'var(--color-text-muted)', display: 'flex', alignItems: 'center' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3"></circle>
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -147,7 +167,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
               height: '32px',
               borderRadius: '50%',
               background: 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)',
-              border: `2px solid ${isProfile ? '#3b82f6' : 'rgba(255,255,255,0.2)'}`,
+              border: `2px solid ${isProfile ? '#3b82f6' : 'var(--border-color)'}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -168,10 +188,10 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
       <div style={{ display: 'flex', flex: 1, minHeight: 'calc(100vh - 64px)' }}>
         
         {/* 2a. LEFT SIDEBAR */}
-        <aside style={{
+        <aside className="sidebar-nav" style={{
           width: '240px',
-          background: '#09090b',
-          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'var(--bg-surface)',
+          borderRight: '1px solid var(--border-color)',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
@@ -184,9 +204,9 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
           {/* Top section of sidebar */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             
-            {/* Active Monitoring Label */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '8px', padding: '10px 12px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#60a5fa' }}>
+            {/* Channels Label */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--bg-base)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '10px 12px' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="11" width="18" height="10" rx="2"></rect>
                   <path d="M12 2v9"></path>
@@ -194,7 +214,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                 </svg>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff' }}>Channels</span>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text)' }}>Channels</span>
               </div>
             </div>
 
@@ -207,16 +227,13 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                 gap: '12px',
                 padding: '10px 14px',
                 borderRadius: '8px',
-                color: isWeb ? '#ffffff' : '#a0aec0',
-                background: isWeb ? 'rgba(255,255,255,0.08)' : 'transparent',
+                color: isWeb ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                background: isWeb ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
                 textDecoration: 'none',
-                fontWeight: isWeb ? 600 : 500,
+                fontWeight: isWeb ? 700 : 500,
                 fontSize: '14px',
                 transition: 'all 0.2s'
-              }}
-              onMouseEnter={e => { if (!isWeb) e.currentTarget.style.color = '#fff'; }}
-              onMouseLeave={e => { if (!isWeb) e.currentTarget.style.color = '#a0aec0'; }}
-              >
+              }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10"></circle>
                   <line x1="2" y1="12" x2="22" y2="12"></line>
@@ -231,18 +248,15 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                 gap: '12px',
                 padding: '10px 14px',
                 borderRadius: '8px',
-                color: isSocial ? '#ffffff' : '#a0aec0',
-                background: isSocial ? 'rgba(255,255,255,0.08)' : 'transparent',
+                color: isSocial ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                background: isSocial ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
                 textDecoration: 'none',
-                fontWeight: isSocial ? 600 : 500,
+                fontWeight: isSocial ? 700 : 500,
                 fontSize: '14px',
                 transition: 'all 0.2s'
-              }}
-              onMouseEnter={e => { if (!isSocial) e.currentTarget.style.color = '#fff'; }}
-              onMouseLeave={e => { if (!isSocial) e.currentTarget.style.color = '#a0aec0'; }}
-              >
+              }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                  <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
                 </svg>
                 Social
               </Link>
@@ -253,75 +267,62 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                 gap: '12px',
                 padding: '10px 14px',
                 borderRadius: '8px',
-                color: isNewsletter ? '#ffffff' : '#a0aec0',
-                background: isNewsletter ? 'rgba(255,255,255,0.08)' : 'transparent',
+                color: isNewsletter ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                background: isNewsletter ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
                 textDecoration: 'none',
-                fontWeight: isNewsletter ? 600 : 500,
+                fontWeight: isNewsletter ? 700 : 500,
                 fontSize: '14px',
                 transition: 'all 0.2s'
-              }}
-              onMouseEnter={e => { if (!isNewsletter) e.currentTarget.style.color = '#fff'; }}
-              onMouseLeave={e => { if (!isNewsletter) e.currentTarget.style.color = '#a0aec0'; }}
-              >
+              }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                   <polyline points="22,6 12,13 2,6"></polyline>
                 </svg>
                 Newsletter
               </Link>
+
             </nav>
 
           </div>
 
-          {/* Bottom actions of sidebar */}
+          {/* Bottom section of sidebar */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             
-            {/* New Analysis button */}
-            <Link href="/settings" style={{ textDecoration: 'none' }}>
-              <button style={{
-                width: '100%',
-                background: '#ffffff',
-                color: '#000000',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '10px',
-                fontWeight: 700,
-                fontSize: '13px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
-              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+            {/* New Analysis Button */}
+            <Link href="/" style={{ textDecoration: 'none' }}>
+              <button 
+                className="glow-btn glow-btn-primary" 
+                style={{ 
+                  width: '100%', 
+                  justifyContent: 'center', 
+                  padding: '10px 14px',
+                  borderRadius: '6px',
+                  fontWeight: 600,
+                  fontSize: '13px'
+                }}
               >
                 <span>+</span> New Analysis
               </button>
             </Link>
 
-            {/* Help & Docs Links */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '16px' }}>
+            {/* Help & Account Links */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
               
               <Link href="/settings" style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
                 fontSize: '13px',
-                color: '#718096',
+                color: isSettings ? 'var(--color-text)' : 'var(--color-text-muted)',
                 textDecoration: 'none',
+                fontWeight: isSettings ? 600 : 400,
                 transition: 'color 0.2s'
-              }}
-              onMouseEnter={e => e.currentTarget.style.color = '#fff'}
-              onMouseLeave={e => e.currentTarget.style.color = '#718096'}
-              >
+              }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                 </svg>
-                Help
+                Settings
               </Link>
 
               <Link href="/profile" style={{
@@ -329,14 +330,11 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                 alignItems: 'center',
                 gap: '10px',
                 fontSize: '13px',
-                color: isProfile ? '#ffffff' : '#718096',
+                color: isProfile ? 'var(--color-text)' : 'var(--color-text-muted)',
                 fontWeight: isProfile ? 600 : 400,
                 textDecoration: 'none',
                 transition: 'color 0.2s'
-              }}
-              onMouseEnter={e => e.currentTarget.style.color = '#fff'}
-              onMouseLeave={e => { if (!isProfile) e.currentTarget.style.color = '#718096'; }}
-              >
+              }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
@@ -349,7 +347,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
         </aside>
 
         {/* 2b. MAIN CONTENT WINDOW */}
-        <main style={{ flex: 1, padding: '40px', background: '#000000', overflowY: 'auto' }}>
+        <main style={{ flex: 1, padding: '40px', background: 'var(--bg-base)', overflowY: 'auto' }}>
           {children}
         </main>
 

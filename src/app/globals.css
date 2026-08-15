@@ -30,6 +30,25 @@
   --glass-blur: blur(16px);
 }
 
+.light-theme,
+[data-theme='light'] {
+  --bg-base: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-hover: #f1f5f9;
+  --border-color: rgba(0, 0, 0, 0.08);
+  --border-color-hover: rgba(0, 0, 0, 0.16);
+  
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  
+  --color-primary: #2563eb;
+  --color-primary-glow: rgba(37, 99, 235, 0.12);
+  --color-secondary: #0891b2;
+  --color-secondary-glow: rgba(8, 145, 178, 0.12);
+  
+  --shadow-lg: 0 4px 20px -2px rgba(0, 0, 0, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -39,12 +58,58 @@
 }
 
 body {
-  background: #000000;
+  background: var(--bg-base);
   color: var(--color-text);
   font-family: var(--font-body);
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.light-theme body,
+[data-theme='light'] body {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+.light-theme .glass-card,
+[data-theme='light'] .glass-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+}
+
+.light-theme .glass-card:hover,
+[data-theme='light'] .glass-card:hover {
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
+}
+
+.light-theme header,
+[data-theme='light'] header,
+.light-theme aside,
+[data-theme='light'] aside {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+.light-theme input,
+[data-theme='light'] input,
+.light-theme select,
+[data-theme='light'] select,
+.light-theme textarea,
+[data-theme='light'] textarea {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* Compact Table Density */
+.compact-density table th,
+.compact-density table td {
+  padding: 6px 10px !important;
+  font-size: 12px !important;
 }
 
 h1, h2, h3, h4, h5, h6 {
