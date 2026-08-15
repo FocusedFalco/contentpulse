@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
 
     const conn = await checkConnection();
     if (!conn.connected) {
-      return NextResponse.json({ success: true, items: [] });
+      return NextResponse.json({ success: true, handles: [], items: [] });
     }
 
     let whereClause = 'LOWER(c.channel) = LOWER($1)';
@@ -16,13 +16,33 @@ export async function GET(req: NextRequest) {
 
     if (channel === 'social') {
       whereClause = "LOWER(c.channel) IN ('social', 'youtube')";
-      params.pop(); // No $1 needed if hardcoded in IN clause
+      params.pop();
     } else if (channel === 'all') {
       whereClause = '1=1';
       params.pop();
     }
 
-    const res = await query(
+    // 1. Group by Handle / Account / Creator
+    const handlesRes = await query(
+      `SELECT 
+        COALESCE(NULLIF(c.author, ''), 'Connected Account') as handle_name,
+        c.channel,
+        MIN(c.url) as sample_url,
+        COUNT(DISTINCT c.content_id)::int as items_count,
+        COALESCE(SUM(m.views), 0)::int as total_views,
+        COALESCE(SUM(m.conversions), 0)::int as total_conversions,
+        COALESCE(AVG(m.engagement_rate), 0)::float as avg_engagement,
+        MAX(c.publish_date) as last_synced
+      FROM content_items c
+      LEFT JOIN content_metrics_daily m ON c.content_id = m.content_id
+      WHERE ${whereClause}
+      GROUP BY COALESCE(NULLIF(c.author, ''), 'Connected Account'), c.channel
+      ORDER BY total_views DESC`,
+      params
+    );
+
+    // 2. Individual content items (for fallback/drilldown)
+    const itemsRes = await query(
       `SELECT 
         c.content_id, 
         c.title, 
@@ -49,12 +69,13 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      items: res.rows
+      handles: handlesRes.rows,
+      items: itemsRes.rows
     });
   } catch (err: any) {
     console.error('Error fetching channel items:', err);
     return NextResponse.json(
-      { success: false, error: err?.message || String(err), items: [] },
+      { success: false, error: err?.message || String(err), handles: [], items: [] },
       { status: 500 }
     );
   }

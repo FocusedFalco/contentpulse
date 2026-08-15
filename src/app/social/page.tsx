@@ -4,20 +4,15 @@ import React, { useState, useEffect } from 'react';
 import SidebarLayout from '../SidebarLayout';
 import Link from 'next/link';
 
-interface SocialItem {
-  content_id: number;
-  title: string;
+interface SocialHandle {
+  handle_name: string;
   channel: string;
-  format: string;
-  word_count: number | null;
-  duration: number | null;
-  publish_date: string;
-  author: string;
-  url: string;
-  topic?: string;
+  sample_url: string;
+  items_count: number;
   total_views: number;
   total_conversions: number;
   avg_engagement: number;
+  last_synced: string;
 }
 
 const ALLOWED_SOCIAL_DOMAINS = [
@@ -33,49 +28,49 @@ const ALLOWED_SOCIAL_DOMAINS = [
 ];
 
 const PLATFORMS = [
-  { name: 'X / Twitter', domain: 'x.com', placeholder: '@sarahchen or https://x.com/sarahchen/status/182049' },
-  { name: 'LinkedIn', domain: 'linkedin.com', placeholder: 'https://linkedin.com/posts/acme-growth-update' },
-  { name: 'Instagram', domain: 'instagram.com', placeholder: 'https://instagram.com/p/DAxK938s/' },
-  { name: 'YouTube', domain: 'youtube.com', placeholder: 'https://youtube.com/@techlead or video link' },
-  { name: 'Threads', domain: 'threads.net', placeholder: 'https://threads.net/@creator/post/123' },
-  { name: 'Bluesky', domain: 'bsky.app', placeholder: 'https://bsky.app/profile/user.bsky.social/post/123' },
-  { name: 'TikTok', domain: 'tiktok.com', placeholder: 'https://tiktok.com/@creator/video/123' }
+  { name: 'YouTube', domain: 'youtube.com', placeholder: '@mrbeast or https://youtube.com/@mrbeast' },
+  { name: 'X / Twitter', domain: 'x.com', placeholder: '@sarahchen or https://x.com/sarahchen' },
+  { name: 'LinkedIn', domain: 'linkedin.com', placeholder: 'https://linkedin.com/in/username or post URL' },
+  { name: 'Instagram', domain: 'instagram.com', placeholder: 'https://instagram.com/username or post URL' },
+  { name: 'Threads', domain: 'threads.net', placeholder: 'https://threads.net/@creator' },
+  { name: 'Bluesky', domain: 'bsky.app', placeholder: 'https://bsky.app/profile/user.bsky.social' },
+  { name: 'TikTok', domain: 'tiktok.com', placeholder: 'https://tiktok.com/@creator' }
 ];
 
 export default function SocialChannelPage() {
   const [inputVal, setInputVal] = useState('');
-  const [selectedPlatform, setSelectedPlatform] = useState('X / Twitter');
+  const [selectedPlatform, setSelectedPlatform] = useState('YouTube');
   const [scraping, setScraping] = useState(false);
   const [scrapeLogs, setScrapeLogs] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [items, setItems] = useState<SocialItem[]>([]);
+  const [handles, setHandles] = useState<SocialHandle[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
 
-  // Fetch existing social content
-  const loadSocialItems = async () => {
+  // Fetch connected social channels / handles
+  const loadSocialHandles = async () => {
     try {
       setLoadingItems(true);
       const res = await fetch('/api/content/channel?channel=social');
       const data = await res.json();
-      if (data.success && data.items) {
-        setItems(data.items);
+      if (data.success && data.handles) {
+        setHandles(data.handles);
       }
     } catch (e) {
-      console.error('Failed to load social items:', e);
+      console.error('Failed to load social handles:', e);
     } finally {
       setLoadingItems(false);
     }
   };
 
   useEffect(() => {
-    loadSocialItems();
+    loadSocialHandles();
   }, []);
 
   // Validate domain or handle
   const validateInput = (value: string): { isValid: boolean; normalizedUrl: string; error?: string } => {
     const trimmed = value.trim();
     if (!trimmed) {
-      return { isValid: false, normalizedUrl: '', error: 'Please enter a social handle or profile/post URL.' };
+      return { isValid: false, normalizedUrl: '', error: 'Please enter a social handle or profile URL.' };
     }
 
     // If it's a handle like @username
@@ -83,6 +78,9 @@ export default function SocialChannelPage() {
       const handleName = trimmed.replace(/^@+/, '');
       if (handleName.length < 2) {
         return { isValid: false, normalizedUrl: '', error: 'Please provide a valid handle with at least 2 characters.' };
+      }
+      if (selectedPlatform === 'YouTube') {
+        return { isValid: true, normalizedUrl: `https://www.youtube.com/@${handleName}` };
       }
       return { isValid: true, normalizedUrl: `https://x.com/${handleName}` };
     }
@@ -105,7 +103,7 @@ export default function SocialChannelPage() {
       return {
         isValid: false,
         normalizedUrl: parsedUrl.toString(),
-        error: `Invalid domain "${hostname}". Only social media platforms (X/Twitter, LinkedIn, Instagram, Threads, Bluesky, TikTok, YouTube) or handles (@username) are accepted.`
+        error: `Invalid domain "${hostname}". Only social platforms (YouTube, X/Twitter, LinkedIn, Instagram, Threads, Bluesky, TikTok) or handles (@username) are accepted.`
       };
     }
 
@@ -133,10 +131,10 @@ export default function SocialChannelPage() {
 
     setValidationError(null);
     setScraping(true);
-    setScrapeLogs(`Connecting to crawler for Social profile/post: ${check.normalizedUrl}...`);
+    setScrapeLogs(`Connecting to crawler for Social profile/channel: ${check.normalizedUrl}...`);
 
     try {
-      setScrapeLogs(prev => prev + '\nFetching metadata & analyzing social engagement patterns...');
+      setScrapeLogs(prev => prev + '\nFetching channel metadata & indexing latest feed content...');
       const res = await fetch('/api/ingestion/scrape', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -145,10 +143,10 @@ export default function SocialChannelPage() {
       const data = await res.json();
       if (data.success) {
         setScrapeLogs(
-          prev => prev + `\n\n🎉 SUCCESSFUL SOCIAL INGESTION:\n• Title: "${data.content.title}"\n• Channel: ${data.content.channel.toUpperCase()}\n• Format: ${data.content.format}\n• Estimated Views: ${data.content.estimatedViews.toLocaleString()}\n• Auto Topic: ${data.content.topic}`
+          prev => prev + `\n\n🎉 SUCCESSFUL SOCIAL INGESTION:\n• Channel / Handle: "${data.content.author || data.content.title}"\n• Format: ${data.content.format}\n• Estimated Views: ${data.content.estimatedViews.toLocaleString()}\n• Status: Active Sync Connected`
         );
         setInputVal('');
-        loadSocialItems();
+        loadSocialHandles();
       } else {
         setScrapeLogs(prev => prev + `\n\n❌ FAILED: ${data.error}`);
       }
@@ -159,7 +157,24 @@ export default function SocialChannelPage() {
     }
   };
 
-  const currentPlaceholder = PLATFORMS.find(p => p.name === selectedPlatform)?.placeholder || '@username or social profile link';
+  const currentPlaceholder = PLATFORMS.find(p => p.name === selectedPlatform)?.placeholder || '@username or channel URL';
+
+  // Calculate totals
+  const totalTrackedHandles = handles.length;
+  const totalPostsCount = handles.reduce((acc, h) => acc + h.items_count, 0);
+  const totalReach = handles.reduce((acc, h) => acc + h.total_views, 0);
+  const totalConversions = handles.reduce((acc, h) => acc + h.total_conversions, 0);
+
+  const getPlatformLabel = (url: string, channel: string) => {
+    const u = (url || '').toLowerCase();
+    if (u.includes('youtube.com') || u.includes('youtu.be') || channel === 'youtube') return { name: 'YouTube', color: '#f87171', bg: 'rgba(239, 68, 68, 0.15)' };
+    if (u.includes('twitter.com') || u.includes('x.com')) return { name: 'X / Twitter', color: '#60a5fa', bg: 'rgba(59, 130, 246, 0.15)' };
+    if (u.includes('linkedin.com')) return { name: 'LinkedIn', color: '#0ea5e9', bg: 'rgba(14, 165, 233, 0.15)' };
+    if (u.includes('instagram.com')) return { name: 'Instagram', color: '#ec4899', bg: 'rgba(236, 72, 153, 0.15)' };
+    if (u.includes('threads.net')) return { name: 'Threads', color: '#e2e8f0', bg: 'rgba(255, 255, 255, 0.15)' };
+    if (u.includes('tiktok.com')) return { name: 'TikTok', color: '#22d3ee', bg: 'rgba(6, 182, 212, 0.15)' };
+    return { name: 'Social Stream', color: '#a78bfa', bg: 'rgba(167, 139, 250, 0.15)' };
+  };
 
   return (
     <SidebarLayout>
@@ -174,7 +189,7 @@ export default function SocialChannelPage() {
             </div>
             <h1 style={{ fontSize: '32px', fontWeight: 700, margin: 0, letterSpacing: '-0.5px' }}>Social Channel</h1>
             <p style={{ color: 'var(--color-text-muted)', fontSize: '15px', marginTop: '6px' }}>
-              Monitor virality, audience engagement, and follower conversion across social profiles and posts
+              Connect social accounts and handles. Individual post performance and virality metrics are monitored on your dashboard.
             </p>
           </div>
 
@@ -187,30 +202,30 @@ export default function SocialChannelPage() {
           </div>
         </header>
 
-        {/* Channel Summary Metric Cards */}
+        {/* Summary Metric Cards */}
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '32px' }}>
           <div className="glass-card" style={{ padding: '20px' }}>
-            <span style={{ fontSize: '12px', color: '#718096', fontWeight: 600, textTransform: 'uppercase' }}>Connected Posts</span>
+            <span style={{ fontSize: '12px', color: '#718096', fontWeight: 600, textTransform: 'uppercase' }}>Connected Channels</span>
             <div style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', marginTop: '4px' }}>
-              {items.length}
+              {totalTrackedHandles}
             </div>
-            <span style={{ fontSize: '11px', color: '#60a5fa', marginTop: '2px', display: 'block' }}>Social Streams</span>
+            <span style={{ fontSize: '11px', color: '#60a5fa', marginTop: '2px', display: 'block' }}>{totalPostsCount} Tracked Posts / Videos</span>
           </div>
 
           <div className="glass-card" style={{ padding: '20px' }}>
-            <span style={{ fontSize: '12px', color: '#718096', fontWeight: 600, textTransform: 'uppercase' }}>Total Reach / Views</span>
+            <span style={{ fontSize: '12px', color: '#718096', fontWeight: 600, textTransform: 'uppercase' }}>Combined Reach</span>
             <div style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', marginTop: '4px' }}>
-              {items.reduce((acc, it) => acc + it.total_views, 0).toLocaleString()}
+              {totalReach.toLocaleString()}
             </div>
-            <span style={{ fontSize: '11px', color: '#718096', marginTop: '2px', display: 'block' }}>Estimated Impressions</span>
+            <span style={{ fontSize: '11px', color: '#718096', marginTop: '2px', display: 'block' }}>Total Audience Views</span>
           </div>
 
           <div className="glass-card" style={{ padding: '20px' }}>
             <span style={{ fontSize: '12px', color: '#718096', fontWeight: 600, textTransform: 'uppercase' }}>Social Conversions</span>
             <div style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', marginTop: '4px' }}>
-              {items.reduce((acc, it) => acc + it.total_conversions, 0).toLocaleString()}
+              {totalConversions.toLocaleString()}
             </div>
-            <span style={{ fontSize: '11px', color: '#34d399', marginTop: '2px', display: 'block' }}>${(items.reduce((acc, it) => acc + it.total_conversions, 0) * 49).toLocaleString()} Est. Value</span>
+            <span style={{ fontSize: '11px', color: '#34d399', marginTop: '2px', display: 'block' }}>${(totalConversions * 49).toLocaleString()} Est. Value</span>
           </div>
         </section>
 
@@ -225,10 +240,10 @@ export default function SocialChannelPage() {
             </div>
             <div>
               <h2 style={{ fontSize: '20px', fontWeight: 700, margin: 0, fontFamily: 'var(--font-display)' }}>
-                Add Social Handle or Post URL
+                Connect Social Media Handle or Channel URL
               </h2>
               <span style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-                Enter your handle (e.g. <code>@username</code>) or a direct post link from supported social platforms
+                Enter your YouTube channel link (e.g. <code>@mrbeast</code>) or profile handle from supported social platforms
               </span>
             </div>
           </div>
@@ -244,7 +259,8 @@ export default function SocialChannelPage() {
                   onClick={() => {
                     setSelectedPlatform(p.name);
                     if (!inputVal) {
-                      if (p.name === 'X / Twitter') setInputVal('@');
+                      if (p.name === 'YouTube') setInputVal('@');
+                      else if (p.name === 'X / Twitter') setInputVal('@');
                     }
                   }}
                   style={{
@@ -319,7 +335,7 @@ export default function SocialChannelPage() {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
               <span style={{ fontSize: '12px', color: '#718096' }}>
-                Strict Domain Enforced: Only <strong>X/Twitter, LinkedIn, Instagram, YouTube, Threads, Bluesky, TikTok</strong> accepted.
+                Strict Domain Enforced: Only <strong>YouTube, X/Twitter, LinkedIn, Instagram, Threads, Bluesky, TikTok</strong> accepted.
               </span>
 
               <button
@@ -334,7 +350,7 @@ export default function SocialChannelPage() {
                   cursor: scraping || !inputVal || !!validationError ? 'not-allowed' : 'pointer'
                 }}
               >
-                {scraping ? 'Syncing Social Feed...' : 'Extract & Sync Social'}
+                {scraping ? 'Connecting Channel...' : 'Connect Social Channel'}
               </button>
             </div>
           </form>
@@ -362,19 +378,19 @@ export default function SocialChannelPage() {
           )}
         </section>
 
-        {/* Existing Social Content Feed */}
+        {/* Connected Social Accounts / Handles Feed */}
         <section className="glass-card" style={{ padding: '28px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <div>
               <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0, fontFamily: 'var(--font-display)' }}>
-                Active Social Streams ({items.length})
+                Connected Social Handles & Channels ({handles.length})
               </h2>
               <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-                Content items tracked in your Social channel
+                Active social channels connected to your monitoring pipeline
               </p>
             </div>
             <button
-              onClick={loadSocialItems}
+              onClick={loadSocialHandles}
               style={{
                 background: 'rgba(255,255,255,0.05)',
                 border: '1px solid rgba(255,255,255,0.1)',
@@ -391,18 +407,18 @@ export default function SocialChannelPage() {
 
           {loadingItems ? (
             <div style={{ textAlign: 'center', padding: '40px 0', color: '#718096' }}>
-              Loading social items...
+              Loading connected channels...
             </div>
-          ) : items.length === 0 ? (
+          ) : handles.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '48px 24px', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.08)' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto', color: '#60a5fa' }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
                 </svg>
               </div>
-              <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#ffffff', marginBottom: '6px' }}>No Social Posts Connected Yet</h3>
+              <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#ffffff', marginBottom: '6px' }}>No Social Channels Connected Yet</h3>
               <p style={{ fontSize: '13px', color: '#718096', maxWidth: '400px', margin: '0 auto' }}>
-                Add your social media handle or link above to begin monitoring impressions, engagement rates, and conversions.
+                Add your YouTube channel or social media handle above to begin monitoring channel reach, engagement rates, and conversions.
               </p>
             </div>
           ) : (
@@ -410,57 +426,92 @@ export default function SocialChannelPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: '#718096' }}>
-                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>POST / HANDLE</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>TOPIC CLUSTER</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>VIEWS</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>ENGAGEMENT</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>CONVERSIONS</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 600, textAlign: 'right' }}>DATE</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>CHANNEL / HANDLE</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>PLATFORM</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>TRACKED ITEMS</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>TOTAL REACH</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>AVG ENGAGEMENT</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>STATUS</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600, textAlign: 'right' }}>ACTION</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map(item => (
-                    <tr key={item.content_id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)', transition: 'background 0.2s' }}>
-                      <td style={{ padding: '14px 16px' }}>
-                        <div style={{ fontWeight: 600, color: '#ffffff', marginBottom: '2px' }}>
-                          {item.title}
-                        </div>
-                        <a
-                          href={item.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{ fontSize: '11px', color: '#60a5fa', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                        >
-                          <span>{item.author || 'Social Creator'}</span> • <span>{item.url}</span>
-                        </a>
-                      </td>
-                      <td style={{ padding: '14px 16px' }}>
-                        <span style={{
-                          padding: '3px 8px',
-                          borderRadius: '4px',
-                          background: 'rgba(59, 130, 246, 0.1)',
-                          border: '1px solid rgba(59, 130, 246, 0.2)',
-                          color: '#60a5fa',
-                          fontSize: '11px',
-                          fontWeight: 500
-                        }}>
-                          {item.topic || 'Uncategorized'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '14px 16px', fontWeight: 600, color: '#ffffff' }}>
-                        {item.total_views.toLocaleString()}
-                      </td>
-                      <td style={{ padding: '14px 16px', color: '#34d399', fontWeight: 500 }}>
-                        {(item.avg_engagement * 100).toFixed(1)}%
-                      </td>
-                      <td style={{ padding: '14px 16px', color: '#a0aec0' }}>
-                        {item.total_conversions.toLocaleString()}
-                      </td>
-                      <td style={{ padding: '14px 16px', textAlign: 'right', color: '#718096', fontSize: '12px' }}>
-                        {item.publish_date}
-                      </td>
-                    </tr>
-                  ))}
+                  {handles.map((h, i) => {
+                    const platform = getPlatformLabel(h.sample_url, h.channel);
+                    return (
+                      <tr key={i} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)', transition: 'background 0.2s' }}>
+                        <td style={{ padding: '14px 16px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '8px',
+                              background: platform.bg,
+                              color: platform.color,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: 700,
+                              fontSize: '12px'
+                            }}>
+                              {platform.name === 'YouTube' ? '▶' : (platform.name === 'X / Twitter' ? '𝕏' : '💬')}
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 700, color: '#ffffff' }}>
+                                {h.handle_name}
+                              </div>
+                              <span style={{ fontSize: '11px', color: '#718096' }}>
+                                Last active: {h.last_synced ? new Date(h.last_synced).toLocaleDateString() : 'Active'}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '14px 16px' }}>
+                          <span style={{
+                            padding: '3px 8px',
+                            borderRadius: '4px',
+                            background: platform.bg,
+                            color: platform.color,
+                            fontSize: '11px',
+                            fontWeight: 600
+                          }}>
+                            {platform.name}
+                          </span>
+                        </td>
+                        <td style={{ padding: '14px 16px', color: '#e2e8f0', fontWeight: 600 }}>
+                          {h.items_count} {h.items_count === 1 ? 'item' : 'items'}
+                        </td>
+                        <td style={{ padding: '14px 16px', fontWeight: 700, color: '#ffffff' }}>
+                          {h.total_views.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '14px 16px', color: '#34d399', fontWeight: 600 }}>
+                          {(h.avg_engagement * 100).toFixed(1)}%
+                        </td>
+                        <td style={{ padding: '14px 16px' }}>
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            background: 'rgba(52, 211, 153, 0.1)',
+                            border: '1px solid rgba(52, 211, 153, 0.2)',
+                            color: '#34d399',
+                            fontSize: '11px',
+                            fontWeight: 600
+                          }}>
+                            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#34d399' }}></span>
+                            Active Sync
+                          </span>
+                        </td>
+                        <td style={{ padding: '14px 16px', textAlign: 'right' }}>
+                          <Link href="/?channel=social" style={{ fontSize: '12px', color: '#60a5fa', textDecoration: 'none', fontWeight: 600 }}>
+                            View in Dashboard →
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

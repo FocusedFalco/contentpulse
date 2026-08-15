@@ -4,20 +4,15 @@ import React, { useState, useEffect } from 'react';
 import SidebarLayout from '../SidebarLayout';
 import Link from 'next/link';
 
-interface WebItem {
-  content_id: number;
-  title: string;
+interface WebHandle {
+  handle_name: string;
   channel: string;
-  format: string;
-  word_count: number | null;
-  duration: number | null;
-  publish_date: string;
-  author: string;
-  url: string;
-  topic?: string;
+  sample_url: string;
+  items_count: number;
   total_views: number;
   total_conversions: number;
   avg_engagement: number;
+  last_synced: string;
 }
 
 const WEB_FORMATS = [
@@ -33,27 +28,27 @@ export default function WebChannelPage() {
   const [scraping, setScraping] = useState(false);
   const [scrapeLogs, setScrapeLogs] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [items, setItems] = useState<WebItem[]>([]);
+  const [handles, setHandles] = useState<WebHandle[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
 
-  // Fetch existing web content
-  const loadWebItems = async () => {
+  // Fetch connected web properties
+  const loadWebHandles = async () => {
     try {
       setLoadingItems(true);
       const res = await fetch('/api/content/channel?channel=web');
       const data = await res.json();
-      if (data.success && data.items) {
-        setItems(data.items);
+      if (data.success && data.handles) {
+        setHandles(data.handles);
       }
     } catch (e) {
-      console.error('Failed to load web items:', e);
+      console.error('Failed to load web properties:', e);
     } finally {
       setLoadingItems(false);
     }
   };
 
   useEffect(() => {
-    loadWebItems();
+    loadWebHandles();
   }, []);
 
   // Validate web URL
@@ -67,7 +62,6 @@ export default function WebChannelPage() {
       return { isValid: false, normalizedUrl: '', error: 'Handles are for Social channels. Please enter a full web URL.' };
     }
 
-    // Parse URL
     let parsedUrl: URL;
     try {
       const urlWithProtocol = trimmed.startsWith('http://') || trimmed.startsWith('https://') 
@@ -126,10 +120,10 @@ export default function WebChannelPage() {
       const data = await res.json();
       if (data.success) {
         setScrapeLogs(
-          prev => prev + `\n\n🎉 SUCCESSFUL WEB INGESTION:\n• Title: "${data.content.title}"\n• Channel: ${data.content.channel.toUpperCase()}\n• Format: ${data.content.format}\n• Word Count: ${data.content.wordCount || 'N/A'}\n• Estimated Views: ${data.content.estimatedViews.toLocaleString()}\n• Auto Topic: ${data.content.topic}`
+          prev => prev + `\n\n🎉 SUCCESSFUL WEB INGESTION:\n• Property / Author: "${data.content.author || data.content.title}"\n• Format: ${data.content.format}\n• Word Count: ${data.content.wordCount || 'N/A'}\n• Estimated Views: ${data.content.estimatedViews.toLocaleString()}\n• Status: Active Sync Connected`
         );
         setInputVal('');
-        loadWebItems();
+        loadWebHandles();
       } else {
         setScrapeLogs(prev => prev + `\n\n❌ FAILED: ${data.error}`);
       }
@@ -143,8 +137,10 @@ export default function WebChannelPage() {
   const currentPlaceholder = WEB_FORMATS.find(p => p.name === selectedFormat)?.placeholder || 'https://myblog.com/posts/scaling-nextjs';
 
   // Calculate summary metrics
-  const totalViews = items.reduce((acc, it) => acc + it.total_views, 0);
-  const totalConversions = items.reduce((acc, it) => acc + it.total_conversions, 0);
+  const totalProperties = handles.length;
+  const totalArticles = handles.reduce((acc, h) => acc + h.items_count, 0);
+  const totalViews = handles.reduce((acc, h) => acc + h.total_views, 0);
+  const totalConversions = handles.reduce((acc, h) => acc + h.total_conversions, 0);
 
   return (
     <SidebarLayout>
@@ -159,7 +155,7 @@ export default function WebChannelPage() {
             </div>
             <h1 style={{ fontSize: '32px', fontWeight: 700, margin: 0, letterSpacing: '-0.5px' }}>Web Channel</h1>
             <p style={{ color: 'var(--color-text-muted)', fontSize: '15px', marginTop: '6px' }}>
-              Connect web articles, documentation, and company blogs. Monitor GA4 pageviews, reading depth, and SEO conversions.
+              Connect web properties and blogs. Aggregate GA4 traffic and reading performance are displayed in your dashboard.
             </p>
           </div>
 
@@ -175,11 +171,11 @@ export default function WebChannelPage() {
         {/* Channel Summary Metric Cards */}
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '32px' }}>
           <div className="glass-card" style={{ padding: '20px' }}>
-            <span style={{ fontSize: '12px', color: '#718096', fontWeight: 600, textTransform: 'uppercase' }}>Connected Articles</span>
+            <span style={{ fontSize: '12px', color: '#718096', fontWeight: 600, textTransform: 'uppercase' }}>Connected Properties</span>
             <div style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', marginTop: '4px' }}>
-              {items.length}
+              {totalProperties}
             </div>
-            <span style={{ fontSize: '11px', color: '#34d399', marginTop: '2px', display: 'block' }}>Active Tracking</span>
+            <span style={{ fontSize: '11px', color: '#34d399', marginTop: '2px', display: 'block' }}>{totalArticles} Tracked Articles</span>
           </div>
 
           <div className="glass-card" style={{ padding: '20px' }}>
@@ -324,7 +320,7 @@ export default function WebChannelPage() {
                   cursor: scraping || !inputVal || !!validationError ? 'not-allowed' : 'pointer'
                 }}
               >
-                {scraping ? 'Syncing Web Page...' : 'Extract & Sync Web Article'}
+                {scraping ? 'Syncing Web Page...' : 'Connect Web Property'}
               </button>
             </div>
           </form>
@@ -352,19 +348,19 @@ export default function WebChannelPage() {
           )}
         </section>
 
-        {/* Existing Connected Web Articles Feed */}
+        {/* Connected Web Properties Feed */}
         <section className="glass-card" style={{ padding: '28px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <div>
               <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0, fontFamily: 'var(--font-display)' }}>
-                Connected Web Channels & Articles ({items.length})
+                Connected Web Properties & Domains ({handles.length})
               </h2>
               <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-                Active articles and pages tracked under the Web channel
+                Active blogs, documentation sites, and web domains connected to your monitoring pipeline
               </p>
             </div>
             <button
-              onClick={loadWebItems}
+              onClick={loadWebHandles}
               style={{
                 background: 'rgba(255,255,255,0.05)',
                 border: '1px solid rgba(255,255,255,0.1)',
@@ -381,18 +377,18 @@ export default function WebChannelPage() {
 
           {loadingItems ? (
             <div style={{ textAlign: 'center', padding: '40px 0', color: '#718096' }}>
-              Loading web items...
+              Loading web properties...
             </div>
-          ) : items.length === 0 ? (
+          ) : handles.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '48px 24px', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.08)' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(52,211,153,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto', color: '#34d399' }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10"></circle>
                   <line x1="2" y1="12" x2="22" y2="12"></line>
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path>
                 </svg>
               </div>
-              <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#ffffff', marginBottom: '6px' }}>No Web Articles Connected Yet</h3>
+              <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#ffffff', marginBottom: '6px' }}>No Web Properties Connected Yet</h3>
               <p style={{ fontSize: '13px', color: '#718096', maxWidth: '400px', margin: '0 auto' }}>
                 Add your blog post or web article URL above to begin monitoring pageviews, read depth, and organic search conversions.
               </p>
@@ -402,54 +398,86 @@ export default function WebChannelPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: '#718096' }}>
-                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>ARTICLE TITLE</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>TOPIC CLUSTER</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>WORDS</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>PAGEVIEWS</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>PROPERTY / DOMAIN</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>CHANNEL TYPE</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>TRACKED ARTICLES</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>TOTAL PAGEVIEWS</th>
                     <th style={{ padding: '12px 16px', fontWeight: 600 }}>CONVERSIONS</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 600, textAlign: 'right' }}>DATE</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>STATUS</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600, textAlign: 'right' }}>ACTION</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map(item => (
-                    <tr key={item.content_id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)', transition: 'background 0.2s' }}>
+                  {handles.map((h, i) => (
+                    <tr key={i} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)', transition: 'background 0.2s' }}>
                       <td style={{ padding: '14px 16px' }}>
-                        <div style={{ fontWeight: 600, color: '#ffffff', marginBottom: '2px' }}>
-                          {item.title}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '8px',
+                            background: 'rgba(52, 211, 153, 0.15)',
+                            color: '#34d399',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 700,
+                            fontSize: '12px'
+                          }}>
+                            🌐
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 700, color: '#ffffff' }}>
+                              {h.handle_name}
+                            </div>
+                            <span style={{ fontSize: '11px', color: '#718096' }}>
+                              Last published: {h.last_synced ? new Date(h.last_synced).toLocaleDateString() : 'Active'}
+                            </span>
+                          </div>
                         </div>
-                        <a
-                          href={item.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{ fontSize: '11px', color: '#34d399', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                        >
-                          <span>{item.author || 'Author'}</span> • <span>{item.url}</span>
-                        </a>
                       </td>
                       <td style={{ padding: '14px 16px' }}>
                         <span style={{
                           padding: '3px 8px',
                           borderRadius: '4px',
                           background: 'rgba(52, 211, 153, 0.1)',
+                          color: '#34d399',
+                          fontSize: '11px',
+                          fontWeight: 600
+                        }}>
+                          Web & Blog
+                        </span>
+                      </td>
+                      <td style={{ padding: '14px 16px', color: '#e2e8f0', fontWeight: 600 }}>
+                        {h.items_count} {h.items_count === 1 ? 'article' : 'articles'}
+                      </td>
+                      <td style={{ padding: '14px 16px', fontWeight: 700, color: '#ffffff' }}>
+                        {h.total_views.toLocaleString()}
+                      </td>
+                      <td style={{ padding: '14px 16px', color: '#34d399', fontWeight: 600 }}>
+                        {h.total_conversions.toLocaleString()}
+                      </td>
+                      <td style={{ padding: '14px 16px' }}>
+                        <span style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '2px 8px',
+                          borderRadius: '12px',
+                          background: 'rgba(52, 211, 153, 0.1)',
                           border: '1px solid rgba(52, 211, 153, 0.2)',
                           color: '#34d399',
                           fontSize: '11px',
-                          fontWeight: 500
+                          fontWeight: 600
                         }}>
-                          {item.topic || 'Uncategorized'}
+                          <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#34d399' }}></span>
+                          Active Sync
                         </span>
                       </td>
-                      <td style={{ padding: '14px 16px', color: '#a0aec0' }}>
-                        {item.word_count ? `${item.word_count.toLocaleString()} words` : 'N/A'}
-                      </td>
-                      <td style={{ padding: '14px 16px', fontWeight: 600, color: '#ffffff' }}>
-                        {item.total_views.toLocaleString()}
-                      </td>
-                      <td style={{ padding: '14px 16px', color: '#34d399', fontWeight: 500 }}>
-                        {item.total_conversions.toLocaleString()}
-                      </td>
-                      <td style={{ padding: '14px 16px', textAlign: 'right', color: '#718096', fontSize: '12px' }}>
-                        {item.publish_date}
+                      <td style={{ padding: '14px 16px', textAlign: 'right' }}>
+                        <Link href="/?channel=web" style={{ fontSize: '12px', color: '#34d399', textDecoration: 'none', fontWeight: 600 }}>
+                          View in Dashboard →
+                        </Link>
                       </td>
                     </tr>
                   ))}

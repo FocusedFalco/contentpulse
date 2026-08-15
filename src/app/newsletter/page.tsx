@@ -4,20 +4,15 @@ import React, { useState, useEffect } from 'react';
 import SidebarLayout from '../SidebarLayout';
 import Link from 'next/link';
 
-interface NewsletterItem {
-  content_id: number;
-  title: string;
+interface NewsletterHandle {
+  handle_name: string;
   channel: string;
-  format: string;
-  word_count: number | null;
-  duration: number | null;
-  publish_date: string;
-  author: string;
-  url: string;
-  topic?: string;
+  sample_url: string;
+  items_count: number;
   total_views: number;
   total_conversions: number;
   avg_engagement: number;
+  last_synced: string;
 }
 
 const ALLOWED_NEWSLETTER_DOMAINS = [
@@ -50,27 +45,27 @@ export default function NewsletterChannelPage() {
   const [scraping, setScraping] = useState(false);
   const [scrapeLogs, setScrapeLogs] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [items, setItems] = useState<NewsletterItem[]>([]);
+  const [handles, setHandles] = useState<NewsletterHandle[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
 
-  // Fetch existing newsletter content
-  const loadNewsletterItems = async () => {
+  // Fetch connected newsletter publications
+  const loadNewsletterHandles = async () => {
     try {
       setLoadingItems(true);
       const res = await fetch('/api/content/channel?channel=newsletter');
       const data = await res.json();
-      if (data.success && data.items) {
-        setItems(data.items);
+      if (data.success && data.handles) {
+        setHandles(data.handles);
       }
     } catch (e) {
-      console.error('Failed to load newsletter items:', e);
+      console.error('Failed to load newsletter handles:', e);
     } finally {
       setLoadingItems(false);
     }
   };
 
   useEffect(() => {
-    loadNewsletterItems();
+    loadNewsletterHandles();
   }, []);
 
   // Validate newsletter domain
@@ -80,7 +75,10 @@ export default function NewsletterChannelPage() {
       return { isValid: false, normalizedUrl: '', error: 'Please enter a newsletter publication or issue URL.' };
     }
 
-    // Parse URL
+    if (trimmed.startsWith('@')) {
+      return { isValid: false, normalizedUrl: '', error: 'Handles are for Social channels. Please enter a full newsletter URL.' };
+    }
+
     let parsedUrl: URL;
     try {
       const urlWithProtocol = trimmed.startsWith('http://') || trimmed.startsWith('https://') 
@@ -120,16 +118,16 @@ export default function NewsletterChannelPage() {
     e.preventDefault();
     const check = validateInput(inputVal);
     if (!check.isValid) {
-      setValidationError(check.error || 'Please enter a valid newsletter URL.');
+      setValidationError(check.error || 'Please enter a valid newsletter publication URL.');
       return;
     }
 
     setValidationError(null);
     setScraping(true);
-    setScrapeLogs(`Connecting to crawler for Newsletter issue: ${check.normalizedUrl}...`);
+    setScrapeLogs(`Connecting to crawler for Newsletter URL: ${check.normalizedUrl}...`);
 
     try {
-      setScrapeLogs(prev => prev + '\nFetching article HTML, calculating word count & audience engagement...');
+      setScrapeLogs(prev => prev + '\nParsing publication HTML, word counts & reader retention...');
       const res = await fetch('/api/ingestion/scrape', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -138,10 +136,10 @@ export default function NewsletterChannelPage() {
       const data = await res.json();
       if (data.success) {
         setScrapeLogs(
-          prev => prev + `\n\n🎉 SUCCESSFUL NEWSLETTER INGESTION:\n• Title: "${data.content.title}"\n• Channel: ${data.content.channel.toUpperCase()}\n• Format: ${data.content.format}\n• Word Count: ${data.content.wordCount || 'N/A'}\n• Estimated Views: ${data.content.estimatedViews.toLocaleString()}\n• Auto Topic: ${data.content.topic}`
+          prev => prev + `\n\n🎉 SUCCESSFUL NEWSLETTER INGESTION:\n• Publication / Author: "${data.content.author || data.content.title}"\n• Format: ${data.content.format}\n• Word Count: ${data.content.wordCount || 'N/A'}\n• Estimated Reads: ${data.content.estimatedViews.toLocaleString()}\n• Status: Active Sync Connected`
         );
         setInputVal('');
-        loadNewsletterItems();
+        loadNewsletterHandles();
       } else {
         setScrapeLogs(prev => prev + `\n\n❌ FAILED: ${data.error}`);
       }
@@ -152,7 +150,23 @@ export default function NewsletterChannelPage() {
     }
   };
 
-  const currentPlaceholder = PLATFORMS.find(p => p.name === selectedPlatform)?.placeholder || 'https://myblog.substack.com/p/awesome-post';
+  const currentPlaceholder = PLATFORMS.find(p => p.name === selectedPlatform)?.placeholder || 'https://mybrand.substack.com/p/issue-1';
+
+  // Calculate totals
+  const totalTrackedPubs = handles.length;
+  const totalIssuesCount = handles.reduce((acc, h) => acc + h.items_count, 0);
+  const totalReadership = handles.reduce((acc, h) => acc + h.total_views, 0);
+  const totalConversions = handles.reduce((acc, h) => acc + h.total_conversions, 0);
+
+  const getPlatformLabel = (url: string) => {
+    const u = (url || '').toLowerCase();
+    if (u.includes('substack.com')) return { name: 'Substack', color: '#ff6719', bg: 'rgba(255, 103, 25, 0.15)' };
+    if (u.includes('beehiiv.com')) return { name: 'Beehiiv', color: '#eab308', bg: 'rgba(234, 179, 8, 0.15)' };
+    if (u.includes('medium.com')) return { name: 'Medium', color: '#22c55e', bg: 'rgba(34, 197, 94, 0.15)' };
+    if (u.includes('ghost.io') || u.includes('ghost.org')) return { name: 'Ghost', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.15)' };
+    if (u.includes('convertkit.com') || u.includes('ck.page')) return { name: 'ConvertKit', color: '#ec4899', bg: 'rgba(236, 72, 153, 0.15)' };
+    return { name: 'Newsletter', color: '#22d3ee', bg: 'rgba(6, 182, 212, 0.15)' };
+  };
 
   return (
     <SidebarLayout>
@@ -167,7 +181,7 @@ export default function NewsletterChannelPage() {
             </div>
             <h1 style={{ fontSize: '32px', fontWeight: 700, margin: 0, letterSpacing: '-0.5px' }}>Newsletter Channel</h1>
             <p style={{ color: 'var(--color-text-muted)', fontSize: '15px', marginTop: '6px' }}>
-              Track readership, open engagement, and subscriber conversion across your newsletter publications
+              Connect newsletter publications. Track aggregate readership and subscriber conversion across issues.
             </p>
           </div>
 
@@ -180,20 +194,20 @@ export default function NewsletterChannelPage() {
           </div>
         </header>
 
-        {/* Channel Summary Metric Cards */}
+        {/* Summary Metric Cards */}
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '32px' }}>
           <div className="glass-card" style={{ padding: '20px' }}>
-            <span style={{ fontSize: '12px', color: '#718096', fontWeight: 600, textTransform: 'uppercase' }}>Connected Issues</span>
+            <span style={{ fontSize: '12px', color: '#718096', fontWeight: 600, textTransform: 'uppercase' }}>Connected Publications</span>
             <div style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', marginTop: '4px' }}>
-              {items.length}
+              {totalTrackedPubs}
             </div>
-            <span style={{ fontSize: '11px', color: '#22d3ee', marginTop: '2px', display: 'block' }}>Publications Tracked</span>
+            <span style={{ fontSize: '11px', color: '#22d3ee', marginTop: '2px', display: 'block' }}>{totalIssuesCount} Tracked Issues</span>
           </div>
 
           <div className="glass-card" style={{ padding: '20px' }}>
             <span style={{ fontSize: '12px', color: '#718096', fontWeight: 600, textTransform: 'uppercase' }}>Total Readership</span>
             <div style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', marginTop: '4px' }}>
-              {items.reduce((acc, it) => acc + it.total_views, 0).toLocaleString()}
+              {totalReadership.toLocaleString()}
             </div>
             <span style={{ fontSize: '11px', color: '#718096', marginTop: '2px', display: 'block' }}>Estimated Reads / Opens</span>
           </div>
@@ -201,9 +215,9 @@ export default function NewsletterChannelPage() {
           <div className="glass-card" style={{ padding: '20px' }}>
             <span style={{ fontSize: '12px', color: '#718096', fontWeight: 600, textTransform: 'uppercase' }}>Subscriber Conversions</span>
             <div style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', marginTop: '4px' }}>
-              {items.reduce((acc, it) => acc + it.total_conversions, 0).toLocaleString()}
+              {totalConversions.toLocaleString()}
             </div>
-            <span style={{ fontSize: '11px', color: '#34d399', marginTop: '2px', display: 'block' }}>${(items.reduce((acc, it) => acc + it.total_conversions, 0) * 49).toLocaleString()} Est. Value</span>
+            <span style={{ fontSize: '11px', color: '#34d399', marginTop: '2px', display: 'block' }}>${(totalConversions * 49).toLocaleString()} Est. Value</span>
           </div>
         </section>
 
@@ -238,7 +252,7 @@ export default function NewsletterChannelPage() {
                   onClick={() => {
                     setSelectedPlatform(p.name);
                     if (!inputVal) {
-                      setInputVal(`https://${p.domain}/`);
+                      setInputVal(p.placeholder);
                     }
                   }}
                   style={{
@@ -319,11 +333,9 @@ export default function NewsletterChannelPage() {
               <button
                 type="submit"
                 disabled={scraping || !inputVal || !!validationError}
-                className="glow-btn"
+                className="glow-btn glow-btn-primary"
                 style={{
-                  background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
-                  color: '#ffffff',
-                  border: 'none',
+                  background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
                   padding: '12px 28px',
                   fontWeight: 600,
                   fontSize: '14px',
@@ -331,7 +343,7 @@ export default function NewsletterChannelPage() {
                   cursor: scraping || !inputVal || !!validationError ? 'not-allowed' : 'pointer'
                 }}
               >
-                {scraping ? 'Syncing Newsletter Issue...' : 'Extract & Sync Newsletter'}
+                {scraping ? 'Connecting Publication...' : 'Connect Newsletter Publication'}
               </button>
             </div>
           </form>
@@ -359,19 +371,19 @@ export default function NewsletterChannelPage() {
           )}
         </section>
 
-        {/* Existing Newsletter Content Feed */}
+        {/* Connected Newsletter Publications Feed */}
         <section className="glass-card" style={{ padding: '28px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <div>
               <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0, fontFamily: 'var(--font-display)' }}>
-                Active Newsletter Publications ({items.length})
+                Connected Newsletter Publications ({handles.length})
               </h2>
               <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-                Content items tracked in your Newsletter channel
+                Active newsletters and email publications connected to your monitoring pipeline
               </p>
             </div>
             <button
-              onClick={loadNewsletterItems}
+              onClick={loadNewsletterHandles}
               style={{
                 background: 'rgba(255,255,255,0.05)',
                 border: '1px solid rgba(255,255,255,0.1)',
@@ -388,9 +400,9 @@ export default function NewsletterChannelPage() {
 
           {loadingItems ? (
             <div style={{ textAlign: 'center', padding: '40px 0', color: '#718096' }}>
-              Loading newsletter items...
+              Loading connected publications...
             </div>
-          ) : items.length === 0 ? (
+          ) : handles.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '48px 24px', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.08)' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(6,182,212,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto', color: '#22d3ee' }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -398,9 +410,9 @@ export default function NewsletterChannelPage() {
                   <polyline points="22,6 12,13 2,6"></polyline>
                 </svg>
               </div>
-              <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#ffffff', marginBottom: '6px' }}>No Newsletter Issues Connected Yet</h3>
+              <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#ffffff', marginBottom: '6px' }}>No Newsletters Connected Yet</h3>
               <p style={{ fontSize: '13px', color: '#718096', maxWidth: '400px', margin: '0 auto' }}>
-                Add your newsletter publication link above to begin monitoring readership, word count performance, and conversions.
+                Add your Substack or Beehiiv publication URL above to begin monitoring readership, word counts, and subscriber conversion rates.
               </p>
             </div>
           ) : (
@@ -408,57 +420,92 @@ export default function NewsletterChannelPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: '#718096' }}>
-                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>ISSUE TITLE</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>TOPIC CLUSTER</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>WORDS</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>EST. VIEWS</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>PUBLICATION / AUTHOR</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>PLATFORM</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>TRACKED ISSUES</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>TOTAL READERSHIP</th>
                     <th style={{ padding: '12px 16px', fontWeight: 600 }}>CONVERSIONS</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 600, textAlign: 'right' }}>DATE</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>STATUS</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600, textAlign: 'right' }}>ACTION</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map(item => (
-                    <tr key={item.content_id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)', transition: 'background 0.2s' }}>
-                      <td style={{ padding: '14px 16px' }}>
-                        <div style={{ fontWeight: 600, color: '#ffffff', marginBottom: '2px' }}>
-                          {item.title}
-                        </div>
-                        <a
-                          href={item.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{ fontSize: '11px', color: '#22d3ee', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                        >
-                          <span>{item.author || 'Publication'}</span> • <span>{item.url}</span>
-                        </a>
-                      </td>
-                      <td style={{ padding: '14px 16px' }}>
-                        <span style={{
-                          padding: '3px 8px',
-                          borderRadius: '4px',
-                          background: 'rgba(6, 182, 212, 0.1)',
-                          border: '1px solid rgba(6, 182, 212, 0.2)',
-                          color: '#22d3ee',
-                          fontSize: '11px',
-                          fontWeight: 500
-                        }}>
-                          {item.topic || 'Uncategorized'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '14px 16px', color: '#a0aec0' }}>
-                        {item.word_count ? `${item.word_count.toLocaleString()} words` : 'N/A'}
-                      </td>
-                      <td style={{ padding: '14px 16px', fontWeight: 600, color: '#ffffff' }}>
-                        {item.total_views.toLocaleString()}
-                      </td>
-                      <td style={{ padding: '14px 16px', color: '#34d399', fontWeight: 500 }}>
-                        {item.total_conversions.toLocaleString()}
-                      </td>
-                      <td style={{ padding: '14px 16px', textAlign: 'right', color: '#718096', fontSize: '12px' }}>
-                        {item.publish_date}
-                      </td>
-                    </tr>
-                  ))}
+                  {handles.map((h, i) => {
+                    const platform = getPlatformLabel(h.sample_url);
+                    return (
+                      <tr key={i} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)', transition: 'background 0.2s' }}>
+                        <td style={{ padding: '14px 16px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '8px',
+                              background: platform.bg,
+                              color: platform.color,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: 700,
+                              fontSize: '12px'
+                            }}>
+                              ✉️
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 700, color: '#ffffff' }}>
+                                {h.handle_name}
+                              </div>
+                              <span style={{ fontSize: '11px', color: '#718096' }}>
+                                Last issue: {h.last_synced ? new Date(h.last_synced).toLocaleDateString() : 'Active'}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '14px 16px' }}>
+                          <span style={{
+                            padding: '3px 8px',
+                            borderRadius: '4px',
+                            background: platform.bg,
+                            color: platform.color,
+                            fontSize: '11px',
+                            fontWeight: 600
+                          }}>
+                            {platform.name}
+                          </span>
+                        </td>
+                        <td style={{ padding: '14px 16px', color: '#e2e8f0', fontWeight: 600 }}>
+                          {h.items_count} {h.items_count === 1 ? 'issue' : 'issues'}
+                        </td>
+                        <td style={{ padding: '14px 16px', fontWeight: 700, color: '#ffffff' }}>
+                          {h.total_views.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '14px 16px', color: '#34d399', fontWeight: 600 }}>
+                          {h.total_conversions.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '14px 16px' }}>
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            background: 'rgba(52, 211, 153, 0.1)',
+                            border: '1px solid rgba(52, 211, 153, 0.2)',
+                            color: '#34d399',
+                            fontSize: '11px',
+                            fontWeight: 600
+                          }}>
+                            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#34d399' }}></span>
+                            Active Sync
+                          </span>
+                        </td>
+                        <td style={{ padding: '14px 16px', textAlign: 'right' }}>
+                          <Link href="/?channel=newsletter" style={{ fontSize: '12px', color: '#22d3ee', textDecoration: 'none', fontWeight: 600 }}>
+                            View in Dashboard →
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

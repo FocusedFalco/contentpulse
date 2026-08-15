@@ -61,21 +61,44 @@ export async function POST(req: NextRequest) {
         console.warn('Failed to scrape channel ID from HTML, will try direct search:', err);
       }
 
-      // If we couldn't parse the channel ID from HTML, let's try to resolve it from the username handle via search
+      // If we couldn't parse the channel ID from HTML, resolve it directly from the handle via Channels API
       if (!channelId) {
         try {
           const handleMatch = url.match(/youtube\.com\/@([a-zA-Z0-9_\-\.]+)/i);
           if (handleMatch) {
-            const handle = handleMatch[1];
-            const searchUrl = `https://www.googleapis.com/youtube/v3/search?key=${youtubeApiKey}&q=${handle}&type=channel&part=id&maxResults=1`;
-            const searchRes = await fetch(searchUrl);
-            const searchData = await searchRes.json();
-            if (searchData.items && searchData.items.length > 0) {
-              channelId = searchData.items[0].id.channelId;
+            const rawHandle = handleMatch[1];
+            // 1. Exact forHandle lookup (100% precision)
+            const handleUrl = `https://www.googleapis.com/youtube/v3/channels?key=${youtubeApiKey}&forHandle=${encodeURIComponent(rawHandle)}&part=id,snippet`;
+            const handleRes = await fetch(handleUrl);
+            const handleData = await handleRes.json();
+            if (handleData.items && handleData.items.length > 0) {
+              channelId = handleData.items[0].id;
+              console.log(`Resolved exact Channel ID via forHandle: ${channelId} (${handleData.items[0].snippet?.title})`);
+            }
+
+            // 2. Try forUsername lookup as fallback
+            if (!channelId) {
+              const usernameUrl = `https://www.googleapis.com/youtube/v3/channels?key=${youtubeApiKey}&forUsername=${encodeURIComponent(rawHandle)}&part=id,snippet`;
+              const userRes = await fetch(usernameUrl);
+              const userData = await userRes.json();
+              if (userData.items && userData.items.length > 0) {
+                channelId = userData.items[0].id;
+                console.log(`Resolved exact Channel ID via forUsername: ${channelId} (${userData.items[0].snippet?.title})`);
+              }
+            }
+
+            // 3. Fallback to channel search only if handle lookup returned no items
+            if (!channelId) {
+              const searchUrl = `https://www.googleapis.com/youtube/v3/search?key=${youtubeApiKey}&q=${encodeURIComponent(rawHandle)}&type=channel&part=id&maxResults=1`;
+              const searchRes = await fetch(searchUrl);
+              const searchData = await searchRes.json();
+              if (searchData.items && searchData.items.length > 0) {
+                channelId = searchData.items[0].id.channelId;
+              }
             }
           }
         } catch (err) {
-          console.error('Failed to resolve channel ID via Search API:', err);
+          console.error('Failed to resolve channel ID via Channels API:', err);
         }
       }
 
