@@ -82,9 +82,8 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
   const channelTabs = [
     { key: 'all', label: 'All Channels', description: 'Unified Portfolio' },
     { key: 'web', label: 'Web', description: 'GA4 & Articles' },
-    { key: 'social', label: 'Social', description: 'X, LinkedIn, IG' },
-    { key: 'newsletter', label: 'Newsletter', description: 'Substack & Beehiiv' },
-    { key: 'youtube', label: 'YouTube', description: 'Video & Shorts' }
+    { key: 'social', label: 'Social & Video', description: 'YouTube, X, LinkedIn, IG' },
+    { key: 'newsletter', label: 'Newsletter', description: 'Substack & Beehiiv' }
   ];
 
   const getChannelHeaderInfo = (ch: string) => {
@@ -96,9 +95,10 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
           syncLink: '/web'
         };
       case 'social':
+      case 'youtube':
         return {
-          title: 'SOCIAL MEDIA DASHBOARD',
-          subtitle: 'Post virality, engagement rate, impressions & follower conversion across social streams',
+          title: 'SOCIAL & VIDEO DASHBOARD',
+          subtitle: 'YouTube videos & Shorts, post virality, engagement rate, impressions & conversions',
           syncLink: '/social'
         };
       case 'newsletter':
@@ -106,12 +106,6 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
           title: 'NEWSLETTER CHANNEL DASHBOARD',
           subtitle: 'Substack, Beehiiv & Medium readership, word count impact & subscriber conversions',
           syncLink: '/newsletter'
-        };
-      case 'youtube':
-        return {
-          title: 'YOUTUBE VIDEO DASHBOARD',
-          subtitle: 'Video watch time, audience retention, Shorts vs Long-form duration analysis',
-          syncLink: '/social'
         };
       default:
         return {

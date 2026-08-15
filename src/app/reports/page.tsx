@@ -24,9 +24,8 @@ interface FullReport {
 const REPORT_CHANNELS = [
   { key: 'all', label: 'All Reports' },
   { key: 'web', label: 'Web' },
-  { key: 'social', label: 'Social' },
-  { key: 'newsletter', label: 'Newsletter' },
-  { key: 'youtube', label: 'YouTube' }
+  { key: 'social', label: 'Social & Video' },
+  { key: 'newsletter', label: 'Newsletter' }
 ];
 
 export default function ReportsPage() {
@@ -201,9 +200,8 @@ export default function ReportsPage() {
               >
                 <option value="all">Unified (All Channels)</option>
                 <option value="web">Web Channel</option>
-                <option value="social">Social Media</option>
-                <option value="newsletter">Newsletter</option>
-                <option value="youtube">YouTube Video</option>
+                <option value="social">Social & Video Channel</option>
+                <option value="newsletter">Newsletter Channel</option>
               </select>
             </div>
 
