@@ -9,6 +9,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
 
   // Helper to check active nav
   const isDashboard = pathname === '/';
+  const isWeb = pathname === '/web';
   const isSocial = pathname === '/social';
   const isNewsletter = pathname === '/newsletter';
   const isReports = pathname === '/reports';
@@ -196,19 +197,22 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
             {/* Sidebar Navigation */}
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               
-              <Link href="/" style={{
+              <Link href="/web" style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
                 padding: '10px 14px',
                 borderRadius: '8px',
-                color: isDashboard ? '#ffffff' : '#a0aec0',
-                background: isDashboard ? 'rgba(255,255,255,0.08)' : 'transparent',
+                color: isWeb ? '#ffffff' : '#a0aec0',
+                background: isWeb ? 'rgba(255,255,255,0.08)' : 'transparent',
                 textDecoration: 'none',
-                fontWeight: 600,
+                fontWeight: isWeb ? 600 : 500,
                 fontSize: '14px',
                 transition: 'all 0.2s'
-              }}>
+              }}
+              onMouseEnter={e => { if (!isWeb) e.currentTarget.style.color = '#fff'; }}
+              onMouseLeave={e => { if (!isWeb) e.currentTarget.style.color = '#a0aec0'; }}
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10"></circle>
                   <line x1="2" y1="12" x2="22" y2="12"></line>

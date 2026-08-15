@@ -172,13 +172,40 @@ export default function NewsletterChannelPage() {
           </div>
 
           <div style={{ display: 'flex', gap: '12px' }}>
-            <Link href="/" style={{ textDecoration: 'none' }}>
+            <Link href="/?channel=newsletter" style={{ textDecoration: 'none' }}>
               <button className="glow-btn" style={{ padding: '8px 16px', fontSize: '13px' }}>
-                View Dashboard
+                View Newsletter Dashboard
               </button>
             </Link>
           </div>
         </header>
+
+        {/* Channel Summary Metric Cards */}
+        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+          <div className="glass-card" style={{ padding: '20px' }}>
+            <span style={{ fontSize: '12px', color: '#718096', fontWeight: 600, textTransform: 'uppercase' }}>Connected Issues</span>
+            <div style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', marginTop: '4px' }}>
+              {items.length}
+            </div>
+            <span style={{ fontSize: '11px', color: '#22d3ee', marginTop: '2px', display: 'block' }}>Publications Tracked</span>
+          </div>
+
+          <div className="glass-card" style={{ padding: '20px' }}>
+            <span style={{ fontSize: '12px', color: '#718096', fontWeight: 600, textTransform: 'uppercase' }}>Total Readership</span>
+            <div style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', marginTop: '4px' }}>
+              {items.reduce((acc, it) => acc + it.total_views, 0).toLocaleString()}
+            </div>
+            <span style={{ fontSize: '11px', color: '#718096', marginTop: '2px', display: 'block' }}>Estimated Reads / Opens</span>
+          </div>
+
+          <div className="glass-card" style={{ padding: '20px' }}>
+            <span style={{ fontSize: '12px', color: '#718096', fontWeight: 600, textTransform: 'uppercase' }}>Subscriber Conversions</span>
+            <div style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', marginTop: '4px' }}>
+              {items.reduce((acc, it) => acc + it.total_conversions, 0).toLocaleString()}
+            </div>
+            <span style={{ fontSize: '11px', color: '#34d399', marginTop: '2px', display: 'block' }}>${(items.reduce((acc, it) => acc + it.total_conversions, 0) * 49).toLocaleString()} Est. Value</span>
+          </div>
+        </section>
 
         {/* Input Box Card */}
         <section className="glass-card" style={{ padding: '32px', marginBottom: '32px', borderLeft: '4px solid #06b6d4', background: 'linear-gradient(180deg, rgba(24,24,27,0.8) 0%, rgba(9,9,11,0.9) 100%)' }}>
