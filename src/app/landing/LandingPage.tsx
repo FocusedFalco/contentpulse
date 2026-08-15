@@ -68,7 +68,7 @@ export default function LandingPage() {
 
           <Link href="/auth?mode=signup" style={{ textDecoration: 'none' }}>
             <button className="glow-btn glow-btn-primary" style={{ padding: '10px 22px', fontSize: '13px', fontWeight: 700, borderRadius: '8px' }}>
-              Get Started Free →
+              Sign Up →
             </button>
           </Link>
         </div>
@@ -276,7 +276,7 @@ export default function LandingPage() {
                 boxShadow: '0 4px 20px rgba(59, 130, 246, 0.3)'
               }}
             >
-              Start Free Trial
+              Sign Up
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '8px', display: 'inline-block', verticalAlign: 'middle' }}>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
                 <polyline points="12 5 19 12 12 19"></polyline>
