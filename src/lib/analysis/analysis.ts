@@ -109,6 +109,32 @@ export async function runAnalysis(channelFilter: string = 'all'): Promise<Struct
   const selectedChannel = channelFilter.toLowerCase().trim();
   const isAll = selectedChannel === 'all' || !selectedChannel;
 
+  // Ensure expanded taxonomy topics exist in the database
+  try {
+    const { ensureExpandedTaxonomy } = await import('../gemini/gemini');
+    await ensureExpandedTaxonomy();
+
+    // Reclassify any misclassified items
+    await query(`
+      UPDATE content_item_taxonomy 
+      SET topic = 'Charity & Philanthropy' 
+      WHERE content_id IN (
+        SELECT content_id FROM content_items 
+        WHERE title ILIKE '%surgery%' OR title ILIKE '%clinic%' OR title ILIKE '%charity%' OR author ILIKE '%philanthropy%' OR title ILIKE '%lives%' OR title ILIKE '%slaves%'
+      );
+
+      UPDATE content_item_taxonomy 
+      SET topic = 'Entertainment & Challenges' 
+      WHERE content_id IN (
+        SELECT content_id FROM content_items 
+        WHERE (title ILIKE '%beast%' OR title ILIKE '%challenge%' OR title ILIKE '%albertsons%' OR title ILIKE '%trapping%' OR title ILIKE '%youtubers%')
+        AND content_id NOT IN (SELECT content_id FROM content_item_taxonomy WHERE topic = 'Charity & Philanthropy')
+      );
+    `);
+  } catch (e) {
+    // Ignore migration error
+  }
+
   // 1. Fetch available channels in the database
   const channelsRes = await query(`
     SELECT 
