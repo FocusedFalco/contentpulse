@@ -272,7 +272,7 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
       </div>
 
       {/* 4. PERFORMANCE LAYOUT GRID */}
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '24px' }}>
+      <section className="mobile-stack-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: '24px' }}>
         
         {/* Left Column: Engagement Overview + Conversion Stack */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -460,7 +460,7 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
 
                 return (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', height: '32px' }}>
-                    <div style={{ width: '140px', fontSize: '12px', fontWeight: 600, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '12px' }}>
+                    <div style={{ width: 'clamp(90px, 30vw, 140px)', fontSize: '12px', fontWeight: 600, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '10px' }}>
                       {topic.topic}
                     </div>
 

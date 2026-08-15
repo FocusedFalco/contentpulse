@@ -410,7 +410,7 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
           {/* Row 1: Two Columns */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '24px' }}>
+          <div className="mobile-stack-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: '24px' }}>
             
             {/* Card 1: Omnichannel Monitoring */}
             <div className="glass-card" style={{ 
@@ -523,14 +523,14 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
           </div>
 
           {/* Row 2: Full Width Card */}
-          <div className="glass-card" style={{ 
+          <div className="glass-card mobile-stack-grid" style={{ 
             padding: '36px', 
             borderRadius: '12px', 
             background: 'rgba(10, 10, 12, 0.45)', 
             border: '1px solid rgba(255, 255, 255, 0.05)',
             display: 'grid',
-            gridTemplateColumns: '1.2fr 1fr',
-            gap: '40px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
+            gap: '32px',
             alignItems: 'center'
           }}>
             {/* Left side Content */}

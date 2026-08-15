@@ -513,3 +513,72 @@ p, span, div, label {
   color: #fff;
   background: rgba(255,255,255,0.05);
 }
+
+/* ==========================================================================
+   Mobile Display & Responsive Layout Optimizations (<= 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .desktop-sidebar {
+    display: none !important;
+  }
+  
+  .desktop-nav-links {
+    display: none !important;
+  }
+  
+  .mobile-only-btn {
+    display: flex !important;
+  }
+  
+  .mobile-bottom-nav {
+    display: flex !important;
+  }
+  
+  .app-main-content {
+    padding: 16px 12px 80px 12px !important;
+  }
+  
+  .app-header {
+    padding: 0 12px !important;
+  }
+
+  /* Grid adaptations for phone view */
+  .mobile-stack-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .mobile-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  
+  .mobile-compact-card {
+    padding: 16px 14px !important;
+  }
+
+  /* Table Touch Scrolling */
+  .table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+  }
+
+  /* Typography scale on phone */
+  h1 {
+    font-size: clamp(20px, 6vw, 28px) !important;
+  }
+  
+  h2 {
+    font-size: clamp(16px, 5vw, 20px) !important;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+

@@ -294,7 +294,7 @@ export default function ReportsPage() {
         )}
 
         {/* Main Content Area: Split List & Document */}
-        <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '24px', alignItems: 'start' }}>
+        <div className="mobile-stack-grid" style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '24px', alignItems: 'start' }}>
           
           {/* Left: Report Archive List */}
           <aside className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: 'calc(100vh - 280px)', overflowY: 'auto' }}>
