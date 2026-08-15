@@ -1,27 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 
 export default function LandingPage() {
-  const [cookiesDismissed, setCookiesDismissed] = useState(false);
-
-  useEffect(() => {
-    const accepted = localStorage.getItem('cookies-accepted');
-    if (accepted) {
-      setCookiesDismissed(true);
-    }
-  }, []);
-
-  const handleAcceptCookies = () => {
-    localStorage.setItem('cookies-accepted', 'true');
-    setCookiesDismissed(true);
-  };
-
-  const handleDenyCookies = () => {
-    setCookiesDismissed(true);
-  };
-
   return (
     <div className="landing-page" style={{ minHeight: '100vh', background: '#000000', color: '#ffffff', fontFamily: 'var(--font-body)', position: 'relative', overflowX: 'hidden' }}>
       
@@ -41,15 +23,6 @@ export default function LandingPage() {
             ContentPulse
           </span>
         </div>
-
-        <nav style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
-          <Link href="/auth?mode=signin" style={{ fontSize: '14px', color: '#a0aec0', textDecoration: 'none', transition: 'color 0.2s' }}>
-            Dashboard
-          </Link>
-          <Link href="/auth?mode=signin" style={{ fontSize: '14px', color: '#a0aec0', textDecoration: 'none', transition: 'color 0.2s' }}>
-            Reports
-          </Link>
-        </nav>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <Link href="/auth?mode=signin" style={{ textDecoration: 'none' }}>
@@ -215,7 +188,6 @@ export default function LandingPage() {
           </div>
         </div>
 
-
         {/* Hero Title */}
         <h1 style={{
           fontSize: 'clamp(56px, 8vw, 92px)',
@@ -286,7 +258,7 @@ export default function LandingPage() {
                 e.currentTarget.style.background = '#000000';
               }}
             >
-              Sign In to Dashboard
+              Sign In
             </button>
           </Link>
         </div>
@@ -548,7 +520,7 @@ export default function LandingPage() {
       <footer style={{
         borderTop: '1px solid rgba(255, 255, 255, 0.05)',
         background: '#030303',
-        padding: '64px 32px 80px 32px',
+        padding: '40px 32px',
         position: 'relative',
         zIndex: 10
       }}>
@@ -557,37 +529,20 @@ export default function LandingPage() {
           margin: '0 auto',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'flex-start',
+          alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '40px'
+          gap: '20px'
         }}>
           <div>
-            <div style={{ fontSize: '16px', fontWeight: 800, color: '#ffffff', marginBottom: '12px' }}>
+            <div style={{ fontSize: '16px', fontWeight: 800, color: '#ffffff', marginBottom: '4px' }}>
               ContentPulse
             </div>
             <div style={{ color: '#4f5e80', fontSize: '13px' }}>
               © 2026 ContentPulse AI. Editorial Precision via Intelligence.
             </div>
           </div>
-
-          <div style={{ display: 'flex', gap: '32px' }}>
-            <Link href="/auth?mode=signup" style={{ fontSize: '13px', color: '#4f5e80', textDecoration: 'none' }}>Privacy</Link>
-            <Link href="/auth?mode=signup" style={{ fontSize: '13px', color: '#4f5e80', textDecoration: 'none' }}>Terms</Link>
-            <Link href="/auth?mode=signup" style={{ fontSize: '13px', color: '#4f5e80', textDecoration: 'none' }}>API Status</Link>
-            <Link href="/auth?mode=signup" style={{ fontSize: '13px', color: '#4f5e80', textDecoration: 'none' }}>Support</Link>
-          </div>
         </div>
       </footer>
-
-      {/* 5. Cookie Banner Pill */}
-      {!cookiesDismissed && (
-        <div className="cookie-banner">
-          <span>This website uses cookies. </span>
-          <Link href="/auth?mode=signup" style={{ textDecoration: 'underline', color: '#38bdf8', marginLeft: '-10px' }}>Learn More</Link>
-          <button className="cookie-banner-btn" onClick={handleAcceptCookies}>Accept</button>
-          <button className="cookie-banner-btn-secondary" onClick={handleDenyCookies}>Deny</button>
-        </div>
-      )}
 
     </div>
   );

@@ -128,48 +128,10 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
           </span>
         </div>
 
-        <nav style={{ display: 'flex', gap: '32px' }}>
-          <span style={{ fontSize: '14px', color: '#a0aec0', cursor: 'pointer', transition: 'color 0.2s' }} onClick={handleOpenImport}>Dashboard</span>
-          <span style={{ fontSize: '14px', color: '#a0aec0', cursor: 'pointer', transition: 'color 0.2s' }} onClick={handleOpenImport}>Reports</span>
-        </nav>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          {/* Bell Icon */}
-          <button style={{ background: 'transparent', border: 'none', color: '#a0aec0', cursor: 'pointer' }} onClick={handleOpenImport}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
-              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
-            </svg>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button onClick={handleOpenImport} className="glow-btn glow-btn-primary" style={{ padding: '8px 18px', fontSize: '13px', borderRadius: '6px' }}>
+            Get Started →
           </button>
-          
-          {/* Gear Icon */}
-          <button style={{ background: 'transparent', border: 'none', color: '#a0aec0', cursor: 'pointer' }} onClick={handleOpenImport}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
-          </button>
-          
-          {/* CP Profile Avatar */}
-          <div 
-            onClick={handleOpenImport}
-            style={{ 
-              width: '32px', 
-              height: '32px', 
-              borderRadius: '50%', 
-              background: 'rgba(255,255,255,0.08)', 
-              border: '1px solid rgba(255,255,255,0.2)', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              fontSize: '12px', 
-              fontWeight: 700, 
-              color: '#ffffff',
-              cursor: 'pointer'
-            }}
-          >
-            CP
-          </div>
         </div>
       </header>
 
@@ -659,7 +621,7 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
       <footer style={{
         borderTop: '1px solid rgba(255, 255, 255, 0.05)',
         background: '#030303',
-        padding: '64px 32px 80px 32px',
+        padding: '40px 32px',
         position: 'relative',
         zIndex: 10
       }}>
@@ -668,37 +630,20 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
           margin: '0 auto',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'flex-start',
+          alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '40px'
+          gap: '20px'
         }}>
           <div>
-            <div style={{ fontSize: '16px', fontWeight: 800, color: '#ffffff', marginBottom: '12px' }}>
+            <div style={{ fontSize: '16px', fontWeight: 800, color: '#ffffff', marginBottom: '4px' }}>
               ContentPulse
             </div>
             <div style={{ color: '#4f5e80', fontSize: '13px' }}>
-              © 2024 ContentPulse AI. Editorial Precision via Intelligence.
+              © 2026 ContentPulse AI. Editorial Precision via Intelligence.
             </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '32px' }}>
-            <span onClick={handleOpenImport} style={{ fontSize: '13px', color: '#4f5e80', cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = '#4f5e80'}>Privacy</span>
-            <span onClick={handleOpenImport} style={{ fontSize: '13px', color: '#4f5e80', cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = '#4f5e80'}>Terms</span>
-            <span onClick={handleOpenImport} style={{ fontSize: '13px', color: '#4f5e80', cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = '#4f5e80'}>API Status</span>
-            <span onClick={handleOpenImport} style={{ fontSize: '13px', color: '#4f5e80', cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = '#4f5e80'}>Support</span>
           </div>
         </div>
       </footer>
-
-      {/* 5. Cookie Banner Pill */}
-      {!cookiesDismissed && (
-        <div className="cookie-banner">
-          <span>This website uses cookies. </span>
-          <span style={{ textDecoration: 'underline', cursor: 'pointer', color: '#38bdf8', marginLeft: '-10px' }} onClick={handleOpenImport}>Learn More</span>
-          <button className="cookie-banner-btn" onClick={handleAcceptCookies}>Accept</button>
-          <button className="cookie-banner-btn-secondary" onClick={handleDenyCookies}>Deny</button>
-        </div>
-      )}
 
       {/* 6. Ingestion Overlay Modal Dialog */}
       {showModal && (
