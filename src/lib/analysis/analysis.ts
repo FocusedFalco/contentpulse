@@ -263,8 +263,8 @@ export async function runAnalysis(channelFilter: string = 'all'): Promise<Struct
         format,
         views,
         conversions,
-        percent_rank() OVER (PARTITION BY format ORDER BY views ASC) as views_percentile,
-        percent_rank() OVER (PARTITION BY format ORDER BY conversions ASC) as conversions_percentile
+        percent_rank() OVER (ORDER BY views ASC) as views_percentile,
+        percent_rank() OVER (ORDER BY conversions ASC) as conversions_percentile
       FROM content_totals
     )
     SELECT 

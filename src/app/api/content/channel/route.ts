@@ -80,3 +80,54 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { handle_name, channel, content_id } = await req.json();
+
+    if (content_id) {
+      await query('DELETE FROM content_items WHERE content_id = $1', [content_id]);
+      return NextResponse.json({ success: true, message: `Deleted content item #${content_id}` });
+    }
+
+    if (handle_name) {
+      let deleteSql = 'DELETE FROM content_items WHERE author = $1';
+      const params: any[] = [handle_name];
+
+      if (channel && channel !== 'all') {
+        if (channel === 'social') {
+          deleteSql += " AND LOWER(channel) IN ('social', 'youtube')";
+        } else {
+          deleteSql += ' AND LOWER(channel) = LOWER($2)';
+          params.push(channel);
+        }
+      }
+
+      const res = await query(deleteSql, params);
+      return NextResponse.json({
+        success: true,
+        message: `Successfully disconnected and wiped ${res.rowCount || 0} items for handle "${handle_name}".`
+      });
+    }
+
+    if (channel && channel !== 'all') {
+      let channelDeleteSql = 'DELETE FROM content_items WHERE LOWER(channel) = LOWER($1)';
+      if (channel === 'social') {
+        channelDeleteSql = "DELETE FROM content_items WHERE LOWER(channel) IN ('social', 'youtube')";
+      }
+      const res = await query(channelDeleteSql, channel === 'social' ? [] : [channel]);
+      return NextResponse.json({
+        success: true,
+        message: `Successfully wiped all ${channel} content (${res.rowCount || 0} items removed).`
+      });
+    }
+
+    return NextResponse.json({ success: false, error: 'handle_name, content_id, or channel is required.' }, { status: 400 });
+  } catch (err: any) {
+    console.error('Error deleting channel items:', err);
+    return NextResponse.json(
+      { success: false, error: err?.message || String(err) },
+      { status: 500 }
+    );
+  }
+}

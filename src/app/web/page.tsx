@@ -47,6 +47,27 @@ export default function WebChannelPage() {
     }
   };
 
+  const handleDisconnectHandle = async (handleName: string) => {
+    if (!confirm(`Are you sure you want to disconnect and wipe all tracked data for "${handleName}"?`)) {
+      return;
+    }
+    try {
+      const res = await fetch('/api/content/channel', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ handle_name: handleName, channel: 'web' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        loadWebHandles();
+      } else {
+        alert(`Failed to disconnect: ${data.error}`);
+      }
+    } catch (err: any) {
+      alert(`Error: ${err?.message || String(err)}`);
+    }
+  };
+
   useEffect(() => {
     loadWebHandles();
   }, []);
@@ -475,9 +496,29 @@ export default function WebChannelPage() {
                         </span>
                       </td>
                       <td style={{ padding: '14px 16px', textAlign: 'right' }}>
-                        <Link href="/?channel=web" style={{ fontSize: '12px', color: '#34d399', textDecoration: 'none', fontWeight: 600 }}>
-                          View in Dashboard →
-                        </Link>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '12px' }}>
+                          <Link href="/?channel=web" style={{ fontSize: '12px', color: '#34d399', textDecoration: 'none', fontWeight: 600 }}>
+                            Dashboard →
+                          </Link>
+                          <button
+                            onClick={() => handleDisconnectHandle(h.handle_name)}
+                            style={{
+                              background: 'rgba(239, 68, 68, 0.1)',
+                              border: '1px solid rgba(239, 68, 68, 0.25)',
+                              color: '#f87171',
+                              padding: '4px 10px',
+                              borderRadius: '6px',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.25)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                          >
+                            Disconnect & Wipe
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
