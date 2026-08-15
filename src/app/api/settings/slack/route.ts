@@ -28,8 +28,7 @@ export async function POST(req: NextRequest) {
           type: "header",
           text: {
             type: "plain_text",
-            text: "📊 ContentPulse Biweekly Editorial Digest",
-            emoji: true
+            text: "ContentPulse Biweekly Editorial Digest"
           }
         },
         {
@@ -46,21 +45,21 @@ export async function POST(req: NextRequest) {
           type: "section",
           text: {
             type: "mrkdwn",
-            text: `*🟢 CONTINUE: ${continueRec}*\n_${continueReason}_`
+            text: `*CONTINUE: ${continueRec}*\n_${continueReason}_`
           }
         },
         {
           type: "section",
           text: {
             type: "mrkdwn",
-            text: `*🔴 STOP: ${stopRec}*\n_${stopReason}_`
+            text: `*STOP: ${stopRec}*\n_${stopReason}_`
           }
         },
         {
           type: "section",
           text: {
             type: "mrkdwn",
-            text: `*🔵 CREATE (High-Priority Search Gaps):*\n• *${create1}* \n• *${create2}*`
+            text: `*CREATE (High-Priority Search Gaps):*\n• *${create1}* \n• *${create2}*`
           }
         },
         {
@@ -70,14 +69,13 @@ export async function POST(req: NextRequest) {
           type: "section",
           text: {
             type: "mrkdwn",
-            text: "🔍 _Verify the complete interactive narrative and explore detailed format, topic, and word-count curves on the ContentPulse Web Dashboard._"
+            text: "_Verify the complete interactive narrative and explore detailed format, topic, and word-count curves on the ContentPulse Web Dashboard._"
           },
           accessory: {
             type: "button",
             text: {
               type: "plain_text",
-              text: "Open Dashboard",
-              emoji: true
+              text: "Open Dashboard"
             },
             value: "click_me_123",
             url: "http://localhost:3000",

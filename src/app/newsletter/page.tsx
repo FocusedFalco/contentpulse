@@ -157,15 +157,15 @@ export default function NewsletterChannelPage() {
       const data = await res.json();
       if (data.success) {
         setScrapeLogs(
-          prev => prev + `\n\n🎉 SUCCESSFUL NEWSLETTER INGESTION:\n• Publication / Author: "${data.content.author || data.content.title}"\n• Format: ${data.content.format}\n• Word Count: ${data.content.wordCount || 'N/A'}\n• Estimated Reads: ${data.content.estimatedViews.toLocaleString()}\n• Status: Active Sync Connected`
+          prev => prev + `\n\nSUCCESSFUL NEWSLETTER INGESTION:\n• Publication / Author: "${data.content.author || data.content.title}"\n• Format: ${data.content.format}\n• Word Count: ${data.content.wordCount || 'N/A'}\n• Estimated Reads: ${data.content.estimatedViews.toLocaleString()}\n• Status: Active Sync Connected`
         );
         setInputVal('');
         loadNewsletterHandles();
       } else {
-        setScrapeLogs(prev => prev + `\n\n❌ FAILED: ${data.error}`);
+        setScrapeLogs(prev => prev + `\n\nFAILED: ${data.error}`);
       }
     } catch (err: any) {
-      setScrapeLogs(prev => prev + `\n\n❌ ERROR: ${err?.message || String(err)}`);
+      setScrapeLogs(prev => prev + `\n\nERROR: ${err?.message || String(err)}`);
     } finally {
       setScraping(false);
     }
@@ -463,9 +463,9 @@ export default function NewsletterChannelPage() {
                               alignItems: 'center',
                               justifyContent: 'center',
                               fontWeight: 700,
-                              fontSize: '12px'
+                              fontSize: '11px'
                             }}>
-                              ✉️
+                              NL
                             </div>
                             <div>
                               <div style={{ fontWeight: 700, color: '#ffffff' }}>

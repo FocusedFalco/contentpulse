@@ -142,17 +142,17 @@ function AuthPageContent() {
 
       const data = await res.json();
       if (!data.success) {
-        setIngestLogs(prev => prev + `\n\n❌ ${data.error}`);
+        setIngestLogs(prev => prev + `\n\n${data.error}`);
         setIngestError(data.error || 'Ingestion failed.');
       } else {
-        setIngestLogs(prev => prev + `\n\n🎉 SUCCESS: Connected "${data.content?.title}"! Preparing your dashboard...`);
+        setIngestLogs(prev => prev + `\n\nSUCCESS: Connected "${data.content?.title}"! Preparing your dashboard...`);
         await new Promise(r => setTimeout(r, 1200));
         router.push('/');
         router.refresh();
       }
     } catch (err: any) {
       setIngestError(err?.message || 'Failed to ingest content.');
-      setIngestLogs(prev => prev + `\n\n❌ ${err?.message}`);
+      setIngestLogs(prev => prev + `\n\n${err?.message}`);
     } finally {
       setIngestLoading(false);
     }
@@ -507,9 +507,9 @@ function AuthPageContent() {
                   {/* Channel Selector */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '18px' }}>
                     {[
-                      { key: 'web' as const, label: '🌐 Web / Blog' },
-                      { key: 'social' as const, label: '💬 Social / YT' },
-                      { key: 'newsletter' as const, label: '✉️ Newsletter' }
+                      { key: 'web' as const, label: 'Web / Blog' },
+                      { key: 'social' as const, label: 'Social / YT' },
+                      { key: 'newsletter' as const, label: 'Newsletter' }
                     ].map(ch => (
                       <button
                         key={ch.key}
@@ -567,7 +567,7 @@ function AuthPageContent() {
                         cursor: ingestLoading || !ingestUrl ? 'not-allowed' : 'pointer'
                       }}
                     >
-                      {ingestLoading ? 'Ingesting Content...' : 'Ingest & Open Dashboard 🚀'}
+                      {ingestLoading ? 'Ingesting Content...' : 'Ingest & Open Dashboard'}
                     </button>
 
                     <button

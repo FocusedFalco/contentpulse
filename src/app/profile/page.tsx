@@ -165,8 +165,8 @@ export default function ProfilePage() {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '14px', color: 'var(--color-text-muted)' }}>
-                  <div>📧 {user.email}</div>
-                  {user.company && <div>🏢 {user.company}</div>}
+                  <div>Email: {user.email}</div>
+                  {user.company && <div>Company: {user.company}</div>}
                   <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
                     Member since {new Date(user.created_at || Date.now()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   </div>
@@ -219,7 +219,6 @@ export default function ProfilePage() {
                 <Link href="/web" style={{ textDecoration: 'none' }}>
                   <div style={{ padding: '16px', borderRadius: '8px', background: 'var(--bg-base)', border: '1px solid var(--border-color)', transition: 'all 0.2s' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-success)', fontWeight: 700, marginBottom: '6px' }}>
-                      <span>🌐</span>
                       <span>Web & Blog Channel</span>
                     </div>
                     <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', margin: 0 }}>
@@ -231,7 +230,6 @@ export default function ProfilePage() {
                 <Link href="/social" style={{ textDecoration: 'none' }}>
                   <div style={{ padding: '16px', borderRadius: '8px', background: 'var(--bg-base)', border: '1px solid var(--border-color)', transition: 'all 0.2s' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-primary)', fontWeight: 700, marginBottom: '6px' }}>
-                      <span>💬</span>
                       <span>Social Media & YouTube</span>
                     </div>
                     <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', margin: 0 }}>
@@ -243,7 +241,6 @@ export default function ProfilePage() {
                 <Link href="/newsletter" style={{ textDecoration: 'none' }}>
                   <div style={{ padding: '16px', borderRadius: '8px', background: 'var(--bg-base)', border: '1px solid var(--border-color)', transition: 'all 0.2s' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-secondary)', fontWeight: 700, marginBottom: '6px' }}>
-                      <span>✉️</span>
                       <span>Newsletter Publications</span>
                     </div>
                     <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', margin: 0 }}>

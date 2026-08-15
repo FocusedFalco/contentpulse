@@ -80,11 +80,11 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
   };
 
   const channelTabs = [
-    { key: 'all', label: 'All Channels', icon: '📊', description: 'Unified Portfolio' },
-    { key: 'web', label: 'Web', icon: '🌐', description: 'GA4 & Articles' },
-    { key: 'social', label: 'Social', icon: '💬', description: 'X, LinkedIn, IG' },
-    { key: 'newsletter', label: 'Newsletter', icon: '✉️', description: 'Substack & Beehiiv' },
-    { key: 'youtube', label: 'YouTube', icon: '🎬', description: 'Video & Shorts' }
+    { key: 'all', label: 'All Channels', description: 'Unified Portfolio' },
+    { key: 'web', label: 'Web', description: 'GA4 & Articles' },
+    { key: 'social', label: 'Social', description: 'X, LinkedIn, IG' },
+    { key: 'newsletter', label: 'Newsletter', description: 'Substack & Beehiiv' },
+    { key: 'youtube', label: 'YouTube', description: 'Video & Shorts' }
   ];
 
   const getChannelHeaderInfo = (ch: string) => {
@@ -93,35 +93,30 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
         return {
           title: 'WEB CHANNEL DASHBOARD',
           subtitle: 'Google Analytics 4 pageviews, reading depth, keyword rankings & conversion paths',
-          badge: '🌐 Web Pages & Blog',
           syncLink: '/web'
         };
       case 'social':
         return {
           title: 'SOCIAL MEDIA DASHBOARD',
           subtitle: 'Post virality, engagement rate, impressions & follower conversion across social streams',
-          badge: '💬 Social Posts & Feeds',
           syncLink: '/social'
         };
       case 'newsletter':
         return {
           title: 'NEWSLETTER CHANNEL DASHBOARD',
           subtitle: 'Substack, Beehiiv & Medium readership, word count impact & subscriber conversions',
-          badge: '✉️ Email Newsletters',
           syncLink: '/newsletter'
         };
       case 'youtube':
         return {
           title: 'YOUTUBE VIDEO DASHBOARD',
           subtitle: 'Video watch time, audience retention, Shorts vs Long-form duration analysis',
-          badge: '🎬 YouTube Video Sync',
           syncLink: '/social'
         };
       default:
         return {
           title: 'UNIFIED CONTENT PERFORMANCE',
           subtitle: 'Cross-platform resonance, topic conversion efficiency & format index across all channels',
-          badge: '📊 Multi-Channel Portfolio',
           syncLink: '/web'
         };
     }
@@ -201,7 +196,6 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
                   transition: 'all 0.2s'
                 }}
               >
-                <span>{tab.icon}</span>
                 <span>{tab.label}</span>
                 {countBadge !== undefined && countBadge > 0 && (
                   <span style={{
@@ -324,7 +318,7 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
               
               <div>
                 <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-warning)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ display: 'inline-block', transform: 'rotate(135deg)' }}>⚡</span> Engagement Rate
+                  Engagement Rate
                 </span>
                 <div style={{ fontSize: '36px', fontWeight: 800, color: 'var(--color-text)', marginTop: '4px', letterSpacing: '-0.5px' }}>
                   {(summary.avgEngagement * 100).toFixed(1)}%
@@ -392,7 +386,7 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
               
               <div>
                 <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  ⏱️ {activeChannel === 'web' ? 'Avg Time on Page' : (activeChannel === 'social' ? 'Active Posts' : 'Avg Reading Time')}
+                  {activeChannel === 'web' ? 'Avg Time on Page' : (activeChannel === 'social' ? 'Active Posts' : 'Avg Reading Time')}
                 </span>
                 <div style={{ fontSize: '36px', fontWeight: 800, color: 'var(--color-text)', marginTop: '4px', letterSpacing: '-0.5px' }}>
                   {activeChannel === 'social' ? totalPieces : `${Math.floor(summary.avgTime / 60)}m ${summary.avgTime % 60}s`}

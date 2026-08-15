@@ -105,12 +105,12 @@ export default function SettingsPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setSlackStatus('✅ Test alert message sent to Slack successfully!');
+        setSlackStatus('Test alert message sent to Slack successfully!');
       } else {
-        setSlackStatus(`❌ Slack test failed: ${data.error}`);
+        setSlackStatus(`Slack test failed: ${data.error}`);
       }
     } catch (err: any) {
-      setSlackStatus(`❌ Error: ${err?.message || String(err)}`);
+      setSlackStatus(`Error: ${err?.message || String(err)}`);
     } finally {
       setSlackTesting(false);
     }
@@ -391,7 +391,7 @@ export default function SettingsPage() {
                 </button>
               </div>
               {slackStatus && (
-                <div style={{ marginTop: '10px', fontSize: '12px', color: slackStatus.startsWith('✅') ? 'var(--color-success)' : 'var(--color-error)' }}>
+                <div style={{ marginTop: '10px', fontSize: '12px', color: slackStatus.includes('successfully') ? 'var(--color-success)' : 'var(--color-error)' }}>
                   {slackStatus}
                 </div>
               )}

@@ -22,11 +22,11 @@ interface FullReport {
 }
 
 const REPORT_CHANNELS = [
-  { key: 'all', label: 'All Reports', icon: '📊' },
-  { key: 'web', label: 'Web', icon: '🌐' },
-  { key: 'social', label: 'Social', icon: '💬' },
-  { key: 'newsletter', label: 'Newsletter', icon: '✉️' },
-  { key: 'youtube', label: 'YouTube', icon: '🎬' }
+  { key: 'all', label: 'All Reports' },
+  { key: 'web', label: 'Web' },
+  { key: 'social', label: 'Social' },
+  { key: 'newsletter', label: 'Newsletter' },
+  { key: 'youtube', label: 'YouTube' }
 ];
 
 export default function ReportsPage() {
@@ -199,11 +199,11 @@ export default function ReportsPage() {
                   cursor: 'pointer'
                 }}
               >
-                <option value="all">📊 Unified (All Channels)</option>
-                <option value="web">🌐 Web Channel</option>
-                <option value="social">💬 Social Media</option>
-                <option value="newsletter">✉️ Newsletter</option>
-                <option value="youtube">🎬 YouTube Video</option>
+                <option value="all">Unified (All Channels)</option>
+                <option value="web">Web Channel</option>
+                <option value="social">Social Media</option>
+                <option value="newsletter">Newsletter</option>
+                <option value="youtube">YouTube Video</option>
               </select>
             </div>
 
@@ -220,10 +220,7 @@ export default function ReportsPage() {
                   Generating Report...
                 </>
               ) : (
-                <>
-                  <span>✨</span>
-                  <span>Generate {generateChannel.toUpperCase()} Report</span>
-                </>
+                <span>Generate {generateChannel.toUpperCase()} Report</span>
               )}
             </button>
           </div>
@@ -263,7 +260,6 @@ export default function ReportsPage() {
                   transition: 'all 0.2s'
                 }}
               >
-                <span>{ch.icon}</span>
                 <span>{ch.label}</span>
               </button>
             );
@@ -403,7 +399,6 @@ export default function ReportsPage() {
               </article>
             ) : (
               <div style={{ textAlign: 'center', padding: '100px 0', color: 'var(--color-text-muted)' }}>
-                <div style={{ fontSize: '40px', marginBottom: '16px' }}>📄</div>
                 <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--color-text)', marginBottom: '6px' }}>
                   No Strategy Report Selected
                 </h3>

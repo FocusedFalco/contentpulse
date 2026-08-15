@@ -164,15 +164,15 @@ export default function SocialChannelPage() {
       const data = await res.json();
       if (data.success) {
         setScrapeLogs(
-          prev => prev + `\n\n🎉 SUCCESSFUL SOCIAL INGESTION:\n• Channel / Handle: "${data.content.author || data.content.title}"\n• Format: ${data.content.format}\n• Estimated Views: ${data.content.estimatedViews.toLocaleString()}\n• Status: Active Sync Connected`
+          prev => prev + `\n\nSUCCESSFUL SOCIAL INGESTION:\n• Channel / Handle: "${data.content.author || data.content.title}"\n• Format: ${data.content.format}\n• Estimated Views: ${data.content.estimatedViews.toLocaleString()}\n• Status: Active Sync Connected`
         );
         setInputVal('');
         loadSocialHandles();
       } else {
-        setScrapeLogs(prev => prev + `\n\n❌ FAILED: ${data.error}`);
+        setScrapeLogs(prev => prev + `\n\nFAILED: ${data.error}`);
       }
     } catch (err: any) {
-      setScrapeLogs(prev => prev + `\n\n❌ ERROR: ${err?.message || String(err)}`);
+      setScrapeLogs(prev => prev + `\n\nERROR: ${err?.message || String(err)}`);
     } finally {
       setScraping(false);
     }
@@ -469,9 +469,9 @@ export default function SocialChannelPage() {
                               alignItems: 'center',
                               justifyContent: 'center',
                               fontWeight: 700,
-                              fontSize: '12px'
+                              fontSize: '11px'
                             }}>
-                              {platform.name === 'YouTube' ? '▶' : (platform.name === 'X / Twitter' ? '𝕏' : '💬')}
+                              {platform.name === 'YouTube' ? 'YT' : (platform.name === 'X / Twitter' ? 'X' : 'SOC')}
                             </div>
                             <div>
                               <div style={{ fontWeight: 700, color: '#ffffff' }}>
