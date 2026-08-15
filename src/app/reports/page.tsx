@@ -99,154 +99,138 @@ export default function ReportsPage() {
     setGenerating(true);
     setGenSteps(steps => steps.map(s => ({ ...s, status: 'pending' })));
 
-    const runStep = (idx: number) => {
-      setGenSteps(steps => steps.map((s, i) => {
-        if (i === idx) return { ...s, status: 'running' };
-        if (i < idx) return { ...s, status: 'done' };
-        return s;
-      }));
-    };
-
     try {
-      runStep(0);
-      await new Promise(r => setTimeout(r, 900));
+      // Step 1
+      setGenSteps(s => s.map((step, i) => i === 0 ? { ...step, status: 'running' } : step));
+      await new Promise(r => setTimeout(r, 600));
+      setGenSteps(s => s.map((step, i) => i === 0 ? { ...step, status: 'done' } : (i === 1 ? { ...step, status: 'running' } : step)));
 
-      runStep(1);
-      await new Promise(r => setTimeout(r, 800));
+      // Step 2
+      await new Promise(r => setTimeout(r, 600));
+      setGenSteps(s => s.map((step, i) => i === 1 ? { ...step, status: 'done' } : (i === 2 ? { ...step, status: 'running' } : step)));
 
-      runStep(2);
-      await new Promise(r => setTimeout(r, 800));
+      // Step 3
+      await new Promise(r => setTimeout(r, 600));
+      setGenSteps(s => s.map((step, i) => i === 2 ? { ...step, status: 'done' } : (i === 3 ? { ...step, status: 'running' } : step)));
 
-      runStep(3);
-      
-      const res = await fetch('/api/reports', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ channel: targetChannel })
-      });
+      // Step 4: Actual API Call with channel query parameter
+      const res = await fetch(`/api/reports?channel=${targetChannel}`, { method: 'POST' });
       const data = await res.json();
-      
+
       if (!data.success) {
-        throw new Error(data.error || 'Gemini generation failed.');
+        throw new Error(data.error || 'Failed to generate editorial report.');
       }
 
-      runStep(4);
-      setGenSteps(steps => steps.map(s => ({ ...s, status: 'done' })));
-      await new Promise(r => setTimeout(r, 600));
+      setGenSteps(s => s.map((step, i) => i === 3 ? { ...step, status: 'done' } : (i === 4 ? { ...step, status: 'running' } : step)));
+      await new Promise(r => setTimeout(r, 500));
+      setGenSteps(s => s.map(step => ({ ...step, status: 'done' })));
 
-      // Refresh reports for current channel filter
-      await fetchReports(selectedChannel);
-      
-      // Load the newly generated report
-      const latestRes = await fetch(`/api/reports?channel=${targetChannel}`);
-      const latestList = await latestRes.json();
-      if (latestList && latestList.length > 0) {
-        loadReport(latestList[0].id);
+      // Reload archive and view the freshly generated report
+      await fetchReports(targetChannel, true);
+      if (data.report && data.report.id) {
+        await loadReport(data.report.id);
       }
     } catch (err: any) {
-      console.error('Failed generating report:', err);
-      setGenSteps(steps => steps.map(s => s.status === 'running' ? { ...s, status: 'error' } : s));
+      console.error('Report generation error:', err);
+      setGenSteps(s => s.map(step => step.status === 'running' ? { ...step, status: 'error' } : step));
       alert(`Report Generation Failed: ${err?.message || String(err)}`);
     } finally {
-      setGenerating(false);
+      setTimeout(() => {
+        setGenerating(false);
+      }, 1200);
     }
   };
 
-  // Convert markdown to HTML using marked.js
-  const getHtmlContent = (markdown: string) => {
-    let processedMarkdown = markdown;
-    
-    processedMarkdown = processedMarkdown
-      .replace(/>\s*\[!NOTE\]/gi, '***💡 NOTE:***')
-      .replace(/>\s*\[!TIP\]/gi, '***💡 TIP:***')
-      .replace(/>\s*\[!IMPORTANT\]/gi, '***⚠️ IMPORTANT:***')
-      .replace(/>\s*\[!WARNING\]/gi, '***⚠️ WARNING:***')
-      .replace(/>\s*\[!CAUTION\]/gi, '***🛑 CAUTION:***');
-
+  const getHtmlContent = (markdownText: string) => {
     try {
-      const html = marked.parse(processedMarkdown);
-      return typeof html === 'string' ? html : '';
+      return marked.parse(markdownText);
     } catch (e) {
-      return `<pre style="white-space: pre-wrap;">${markdown}</pre>`;
+      return markdownText;
     }
   };
 
   const getChannelBadge = (ch?: string) => {
-    switch (ch?.toLowerCase()) {
-      case 'social':
-        return { label: 'SOCIAL', color: '#60a5fa', bg: 'rgba(59, 130, 246, 0.15)', border: 'rgba(59, 130, 246, 0.3)' };
-      case 'newsletter':
-        return { label: 'NEWSLETTER', color: '#22d3ee', bg: 'rgba(6, 182, 212, 0.15)', border: 'rgba(6, 182, 212, 0.3)' };
+    switch ((ch || 'all').toLowerCase()) {
       case 'web':
-        return { label: 'WEB', color: '#34d399', bg: 'rgba(52, 211, 153, 0.15)', border: 'rgba(52, 211, 153, 0.3)' };
+        return { label: 'Web', color: 'var(--color-success)', bg: 'var(--color-success-bg)', border: 'rgba(52, 211, 153, 0.3)' };
+      case 'social':
+        return { label: 'Social', color: 'var(--color-primary)', bg: 'var(--color-primary-glow)', border: 'rgba(59, 130, 246, 0.3)' };
+      case 'newsletter':
+        return { label: 'Newsletter', color: 'var(--color-secondary)', bg: 'var(--color-secondary-glow)', border: 'rgba(6, 182, 212, 0.3)' };
       case 'youtube':
-        return { label: 'YOUTUBE', color: '#f87171', bg: 'rgba(248, 113, 113, 0.15)', border: 'rgba(248, 113, 113, 0.3)' };
+        return { label: 'YouTube', color: '#f87171', bg: 'rgba(239, 68, 68, 0.1)', border: 'rgba(239, 68, 68, 0.3)' };
       default:
-        return { label: 'UNIFIED', color: '#a78bfa', bg: 'rgba(167, 139, 250, 0.15)', border: 'rgba(167, 139, 250, 0.3)' };
+        return { label: 'Unified', color: '#a78bfa', bg: 'rgba(167, 139, 250, 0.1)', border: 'rgba(167, 139, 250, 0.3)' };
     }
   };
 
   return (
     <SidebarLayout>
-      <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px', color: 'var(--color-text)' }}>
         
-        {/* Page Header */}
+        {/* Header Bar with Channel Report Generator */}
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <h1 style={{ fontSize: '32px', fontWeight: 700, margin: 0, letterSpacing: '-0.5px' }}>
+            <h1 style={{ fontSize: '32px', fontWeight: 800, margin: 0, letterSpacing: '-0.5px', color: 'var(--color-text)' }}>
               Editorial Strategy Reports
             </h1>
             <p style={{ color: 'var(--color-text-muted)', fontSize: '15px', marginTop: '4px' }}>
-              AI strategy and recommendations synthesized separately for each channel by the ContentPulse Gemini Narrative Layer
+              Decision-ready, high-signal editorial directives synthesized by Gemini AI
             </p>
           </div>
 
-          {/* Generator Controls */}
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <select
-              value={generateChannel}
-              onChange={e => setGenerateChannel(e.target.value)}
-              disabled={generating}
-              style={{
-                background: '#09090b',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                color: '#ffffff',
-                padding: '10px 14px',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: 600,
-                outline: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="all">📊 Unified Portfolio</option>
-              <option value="web">🌐 Web Channel</option>
-              <option value="social">💬 Social Channel</option>
-              <option value="newsletter">✉️ Newsletter Channel</option>
-              <option value="youtube">🎬 YouTube Channel</option>
-            </select>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            {/* Target Channel Select */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Channel:</span>
+              <select
+                value={generateChannel}
+                onChange={e => setGenerateChannel(e.target.value)}
+                disabled={generating}
+                style={{
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '8px',
+                  color: 'var(--color-text)',
+                  padding: '8px 12px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="all">📊 Unified (All Channels)</option>
+                <option value="web">🌐 Web Channel</option>
+                <option value="social">💬 Social Media</option>
+                <option value="newsletter">✉️ Newsletter</option>
+                <option value="youtube">🎬 YouTube Video</option>
+              </select>
+            </div>
 
-            <button 
+            {/* Generate Button */}
+            <button
               onClick={() => handleGenerateReport(generateChannel)}
               disabled={generating}
               className="glow-btn glow-btn-primary"
-              style={{ 
-                padding: '10px 20px', 
-                fontSize: '13px', 
-                fontWeight: 600,
-                opacity: generating ? 0.6 : 1,
-                cursor: generating ? 'not-allowed' : 'pointer'
-              }}
+              style={{ padding: '10px 20px', fontSize: '13px', borderRadius: '8px' }}
             >
-              {generating ? 'Synthesizing Report...' : `✨ Generate ${generateChannel.toUpperCase()} Report`}
+              {generating ? (
+                <>
+                  <span className="spinner" style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span>
+                  Generating Report...
+                </>
+              ) : (
+                <>
+                  <span>✨</span>
+                  <span>Generate {generateChannel.toUpperCase()} Report</span>
+                </>
+              )}
             </button>
           </div>
         </header>
 
         {/* Channel Filter Tab Bar */}
-        <div style={{
-          background: '#09090b',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+        <div className="glass-card" style={{
           borderRadius: '12px',
           padding: '6px',
           display: 'flex',
@@ -254,7 +238,7 @@ export default function ReportsPage() {
           flexWrap: 'wrap',
           alignItems: 'center'
         }}>
-          <span style={{ fontSize: '11px', fontWeight: 700, color: '#718096', padding: '0 10px', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-text-muted)', padding: '0 10px', textTransform: 'uppercase' }}>
             Filter Archive:
           </span>
           {REPORT_CHANNELS.map(ch => {
@@ -270,10 +254,10 @@ export default function ReportsPage() {
                   gap: '6px',
                   padding: '6px 14px',
                   borderRadius: '6px',
-                  background: active ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                  border: active ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid transparent',
-                  color: active ? '#ffffff' : '#a0aec0',
-                  fontWeight: active ? 600 : 400,
+                  background: active ? 'var(--color-primary-glow)' : 'transparent',
+                  border: active ? '1px solid var(--color-primary)' : '1px solid transparent',
+                  color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                  fontWeight: active ? 700 : 500,
                   fontSize: '13px',
                   cursor: 'pointer',
                   transition: 'all 0.2s'
@@ -289,7 +273,7 @@ export default function ReportsPage() {
         {/* Generation Progress Overlay Card */}
         {generating && (
           <div className="glass-card" style={{ padding: '24px', borderLeft: '4px solid var(--color-primary)' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-text)' }}>
               <span className="spinner" style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.2)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span>
               Synthesizing {generateChannel.toUpperCase()} Editorial Strategy Report...
             </h3>
@@ -304,8 +288,8 @@ export default function ReportsPage() {
                     {step.status === 'error' && <span style={{ color: 'var(--color-error)' }}>✕</span>}
                   </div>
                   <span style={{ 
-                    color: step.status === 'running' ? '#fff' : (step.status === 'done' ? '#e5e7eb' : 'var(--color-text-muted)'),
-                    fontWeight: step.status === 'running' ? 600 : 400
+                    color: step.status === 'running' ? 'var(--color-text)' : (step.status === 'done' ? 'var(--color-text)' : 'var(--color-text-muted)'),
+                    fontWeight: step.status === 'running' ? 700 : 400
                   }}>
                     {step.label}
                   </span>
@@ -340,31 +324,31 @@ export default function ReportsPage() {
                     style={{
                       padding: '14px 16px',
                       borderRadius: '8px',
-                      background: activeTab === rep.id ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)',
-                      border: `1px solid ${activeTab === rep.id ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.04)'}`,
+                      background: activeTab === rep.id ? 'var(--color-primary-glow)' : 'var(--bg-base)',
+                      border: `1px solid ${activeTab === rep.id ? 'var(--color-primary)' : 'var(--border-color)'}`,
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
-                      borderLeft: activeTab === rep.id ? `3px solid ${badge.color}` : '1px solid rgba(255,255,255,0.04)'
+                      borderLeft: activeTab === rep.id ? `3px solid ${badge.color}` : '1px solid var(--border-color)'
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                       <span style={{
-                        fontSize: '9px',
-                        fontWeight: 700,
-                        padding: '2px 6px',
+                        fontSize: '10px',
+                        padding: '1px 6px',
                         borderRadius: '4px',
                         background: badge.bg,
                         color: badge.color,
+                        fontWeight: 700,
                         border: `1px solid ${badge.border}`
                       }}>
                         {badge.label}
                       </span>
-                      <span style={{ fontSize: '11px', color: '#718096' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
                         {new Date(rep.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </span>
                     </div>
 
-                    <h4 style={{ fontSize: '13px', fontWeight: 600, color: activeTab === rep.id ? '#ffffff' : '#e2e8f0', margin: 0, lineHeight: '1.4' }}>
+                    <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text)', margin: 0, lineHeight: '1.4' }}>
                       {rep.title}
                     </h4>
                   </div>
@@ -400,12 +384,12 @@ export default function ReportsPage() {
                         </span>
                       );
                     })()}
-                    <span style={{ fontSize: '12px', color: '#718096' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
                       Generated {new Date(activeReport.created_at).toLocaleString()}
                     </span>
                   </div>
 
-                  <h2 style={{ fontSize: '28px', fontWeight: 800, margin: 0, letterSpacing: '-0.5px', color: '#ffffff' }}>
+                  <h2 style={{ fontSize: '28px', fontWeight: 800, margin: 0, letterSpacing: '-0.5px', color: 'var(--color-text)' }}>
                     {activeReport.title}
                   </h2>
                 </div>
@@ -413,17 +397,17 @@ export default function ReportsPage() {
                 {/* Document Body (Markdown Rendered) */}
                 <div 
                   className="markdown-content"
-                  style={{ fontSize: '15px', lineHeight: '1.75', color: '#e5e7eb' }}
+                  style={{ fontSize: '15px', lineHeight: '1.75', color: 'var(--color-text)' }}
                   dangerouslySetInnerHTML={{ __html: getHtmlContent(activeReport.narrative) }}
                 />
               </article>
             ) : (
               <div style={{ textAlign: 'center', padding: '100px 0', color: 'var(--color-text-muted)' }}>
                 <div style={{ fontSize: '40px', marginBottom: '16px' }}>📄</div>
-                <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#ffffff', marginBottom: '6px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--color-text)', marginBottom: '6px' }}>
                   No Strategy Report Selected
                 </h3>
-                <p style={{ fontSize: '13px', color: '#718096', maxWidth: '400px', margin: '0 auto 20px auto' }}>
+                <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', maxWidth: '400px', margin: '0 auto 20px auto' }}>
                   Select a report from the archive on the left or generate a new channel-specific report.
                 </p>
                 <button

@@ -30,7 +30,6 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
     setActiveChannel(channelKey);
     setLoading(true);
     try {
-      // Update URL query string smoothly
       const url = new URL(window.location.href);
       if (channelKey === 'all') {
         url.searchParams.delete('channel');
@@ -39,7 +38,6 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
       }
       window.history.pushState({}, '', url.toString());
 
-      // Fetch updated analytical data for the selected channel
       const res = await fetch(`/api/analysis?channel=${channelKey}`);
       const newData = await res.json();
       if (newData && !newData.error) {
@@ -52,7 +50,6 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
     }
   };
 
-  // Trigger incremental sync
   const handleSync = async () => {
     setSyncing(true);
     setSyncStatus('Connecting to pipeline...');
@@ -61,7 +58,6 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
       const resData = await res.json();
       if (resData.success) {
         setSyncStatus(`Sync success: ${resData.summary.metricsSynced} new metrics loaded.`);
-        // Reload channel data
         handleSwitchChannel(activeChannel);
       } else {
         setSyncStatus('Sync failed: Check server logs.');
@@ -73,7 +69,6 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
     }
   };
 
-  // Helper to format numbers (e.g. 45218 -> 45.2k)
   const formatK = (num: number) => {
     if (num >= 1000000) {
       return (num / 1000000).toFixed(1) + 'M';
@@ -84,7 +79,6 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
     return num.toLocaleString();
   };
 
-  // Channels definition for tab bar
   const channelTabs = [
     { key: 'all', label: 'All Channels', icon: '📊', description: 'Unified Portfolio' },
     { key: 'web', label: 'Web', icon: '🌐', description: 'GA4 & Articles' },
@@ -93,7 +87,6 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
     { key: 'youtube', label: 'YouTube', icon: '🎬', description: 'Video & Shorts' }
   ];
 
-  // Channel titles and descriptions
   const getChannelHeaderInfo = (ch: string) => {
     switch (ch) {
       case 'web':
@@ -101,7 +94,7 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
           title: 'WEB CHANNEL DASHBOARD',
           subtitle: 'Google Analytics 4 pageviews, reading depth, keyword rankings & conversion paths',
           badge: '🌐 Web Pages & Blog',
-          syncLink: '/settings'
+          syncLink: '/web'
         };
       case 'social':
         return {
@@ -122,21 +115,20 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
           title: 'YOUTUBE VIDEO DASHBOARD',
           subtitle: 'Video watch time, audience retention, Shorts vs Long-form duration analysis',
           badge: '🎬 YouTube Video Sync',
-          syncLink: '/settings'
+          syncLink: '/social'
         };
       default:
         return {
           title: 'UNIFIED CONTENT PERFORMANCE',
           subtitle: 'Cross-platform resonance, topic conversion efficiency & format index across all channels',
           badge: '📊 Multi-Channel Portfolio',
-          syncLink: '/settings'
+          syncLink: '/web'
         };
     }
   };
 
   const channelHeader = getChannelHeaderInfo(activeChannel);
 
-  // Summary Metrics from data
   const summary = data.channelSummary || {
     totalViews: data.topics.reduce((acc, t) => acc + t.totalViews, 0),
     totalConversions: data.topics.reduce((acc, t) => acc + t.totalConversions, 0),
@@ -153,25 +145,22 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
   const avgConversionRate = summary.conversionRate || (totalViews > 0 ? (totalConversions / totalViews) * 100 : 0);
   const totalPieces = summary.piecesCount || data.topics.reduce((acc, t) => acc + t.piecesCount, 0);
 
-  // Sort topics by views for the trajectory resonance chart
   const sortedTopics = [...data.topics].sort((a, b) => b.totalViews - a.totalViews);
   const topTopics = sortedTopics.slice(0, 7);
   const maxTopicViews = topTopics.length > 0 ? Math.max(...topTopics.map(t => t.totalViews), 1) : 1;
 
   return (
-    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '28px', color: 'var(--color-text)' }}>
       
       {/* 1. Sync Status notification */}
       {syncStatus && (
-        <div style={{ background: 'var(--color-primary-glow)', border: '1px solid var(--border-color)', padding: '12px 16px', borderRadius: '8px', fontSize: '13px' }}>
+        <div style={{ background: 'var(--color-primary-glow)', border: '1px solid var(--border-color)', color: 'var(--color-text)', padding: '12px 16px', borderRadius: '8px', fontSize: '13px' }}>
           {syncStatus}
         </div>
       )}
 
       {/* 2. Top Channel Switcher Bar */}
-      <div style={{
-        background: '#09090b',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
+      <div className="glass-card" style={{
         borderRadius: '12px',
         padding: '8px',
         display: 'flex',
@@ -182,12 +171,11 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
       }}>
         {/* Left: Channel Tabs */}
         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <span style={{ fontSize: '11px', fontWeight: 700, color: '#718096', padding: '0 10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-text-muted)', padding: '0 10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Channel:
           </span>
           {channelTabs.map(tab => {
             const isSelected = activeChannel === tab.key;
-            // Find count for this channel
             const matchingChan = data.availableChannels?.find(c => c.channel === tab.key);
             const countBadge = tab.key === 'all' 
               ? data.availableChannels?.reduce((acc, c) => acc + c.count, 0)
@@ -204,25 +192,13 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
                   gap: '8px',
                   padding: '8px 14px',
                   borderRadius: '8px',
-                  background: isSelected ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
-                  border: isSelected ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid transparent',
-                  color: isSelected ? '#ffffff' : '#a0aec0',
+                  background: isSelected ? 'var(--color-primary-glow)' : 'transparent',
+                  border: isSelected ? '1px solid var(--color-primary)' : '1px solid transparent',
+                  color: isSelected ? 'var(--color-primary)' : 'var(--color-text-muted)',
                   fontWeight: isSelected ? 700 : 500,
                   fontSize: '13px',
                   cursor: 'pointer',
                   transition: 'all 0.2s'
-                }}
-                onMouseEnter={e => {
-                  if (!isSelected) {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
-                    e.currentTarget.style.color = '#ffffff';
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (!isSelected) {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = '#a0aec0';
-                  }
                 }}
               >
                 <span>{tab.icon}</span>
@@ -232,8 +208,8 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
                     fontSize: '10px',
                     padding: '1px 6px',
                     borderRadius: '10px',
-                    background: isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(255, 255, 255, 0.06)',
-                    color: isSelected ? '#ffffff' : '#718096',
+                    background: isSelected ? 'var(--color-primary)' : 'var(--border-color)',
+                    color: isSelected ? '#ffffff' : 'var(--color-text-muted)',
                     fontWeight: 600
                   }}>
                     {countBadge}
@@ -250,12 +226,12 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
             onClick={handleSync} 
             disabled={syncing}
             style={{ 
-              background: 'rgba(255,255,255,0.05)', 
-              border: '1px solid rgba(255,255,255,0.1)', 
+              background: 'var(--bg-surface)', 
+              border: '1px solid var(--border-color)', 
               borderRadius: '8px', 
               padding: '6px 14px', 
               fontSize: '12px', 
-              color: '#ffffff', 
+              color: 'var(--color-text)', 
               cursor: 'pointer',
               fontWeight: 600,
               display: 'flex',
@@ -270,10 +246,8 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
 
           <Link href={channelHeader.syncLink} style={{ textDecoration: 'none' }}>
             <button
+              className="glow-btn glow-btn-primary"
               style={{
-                background: '#ffffff',
-                color: '#000000',
-                border: 'none',
                 borderRadius: '8px',
                 padding: '6px 14px',
                 fontSize: '12px',
@@ -294,11 +268,11 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
       {/* 3. Header Title & Context */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '3px 10px', borderRadius: '20px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#60a5fa', fontSize: '11px', fontWeight: 600, marginBottom: '8px' }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#60a5fa' }}></span>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '3px 10px', borderRadius: '20px', background: 'var(--color-primary-glow)', border: '1px solid var(--border-color)', color: 'var(--color-primary)', fontSize: '11px', fontWeight: 600, marginBottom: '8px' }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--color-primary)' }}></span>
             {channelHeader.badge}
           </div>
-          <h1 style={{ fontSize: '28px', fontWeight: 900, letterSpacing: '-0.5px', color: '#ffffff', margin: 0, fontFamily: 'var(--font-display)' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: 900, letterSpacing: '-0.5px', color: 'var(--color-text)', margin: 0, fontFamily: 'var(--font-display)' }}>
             {channelHeader.title}
           </h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', marginTop: '4px' }}>
@@ -307,7 +281,7 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
         </div>
 
         {loading && (
-          <div style={{ color: '#60a5fa', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ color: 'var(--color-primary)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span>⟳</span> Refreshing channel metrics...
           </div>
         )}
@@ -320,9 +294,7 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
           {/* Card 1: Channel Engagement Overview */}
-          <div style={{ 
-            background: '#09090b', 
-            border: '1px solid rgba(255, 255, 255, 0.08)', 
+          <div className="glass-card" style={{ 
             borderRadius: '16px', 
             padding: '24px', 
             display: 'flex', 
@@ -332,10 +304,10 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
           }}>
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.05em', color: '#718096' }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-text-muted)' }}>
                 {activeChannel.toUpperCase()} REACH & ENGAGEMENT
               </span>
-              <span style={{ fontSize: '11px', color: '#718096' }}>
+              <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
                 {totalPieces} content items
               </span>
             </div>
@@ -343,25 +315,25 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
             {/* Metrics */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
-                <span style={{ fontSize: '11px', fontWeight: 600, color: '#34d399', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span style={{ display: 'inline-block', transform: 'rotate(-45deg)' }}>↑</span> Total Views / Reach
                 </span>
-                <div style={{ fontSize: '36px', fontWeight: 800, color: '#ffffff', marginTop: '4px', letterSpacing: '-0.5px' }}>
+                <div style={{ fontSize: '36px', fontWeight: 800, color: 'var(--color-text)', marginTop: '4px', letterSpacing: '-0.5px' }}>
                   {formatK(totalViews)}
                 </div>
-                <span style={{ fontSize: '11px', color: '#718096', marginTop: '2px', display: 'block' }}>
+                <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px', display: 'block' }}>
                   {activeChannel === 'social' ? 'Social Impressions' : (activeChannel === 'newsletter' ? 'Newsletter Opens' : (activeChannel === 'youtube' ? 'Video Views' : 'Combined Streams'))}
                 </span>
               </div>
               
               <div>
-                <span style={{ fontSize: '11px', fontWeight: 600, color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-warning)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span style={{ display: 'inline-block', transform: 'rotate(135deg)' }}>⚡</span> Engagement Rate
                 </span>
-                <div style={{ fontSize: '36px', fontWeight: 800, color: '#ffffff', marginTop: '4px', letterSpacing: '-0.5px' }}>
+                <div style={{ fontSize: '36px', fontWeight: 800, color: 'var(--color-text)', marginTop: '4px', letterSpacing: '-0.5px' }}>
                   {(summary.avgEngagement * 100).toFixed(1)}%
                 </div>
-                <span style={{ fontSize: '11px', color: '#718096', marginTop: '2px', display: 'block' }}>
+                <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px', display: 'block' }}>
                   {activeChannel === 'social' ? 'Likes / Comments / Reposts' : (activeChannel === 'newsletter' ? 'Click-Through Rate' : 'Audience Interaction')}
                 </span>
               </div>
@@ -373,14 +345,14 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
                 <path 
                   d="M 10 55 Q 60 25, 110 50 T 210 65 T 290 35 T 340 55" 
                   fill="none" 
-                  stroke="#34d399" 
+                  stroke="#10b981" 
                   strokeWidth="2.5" 
                   strokeLinecap="round"
                 />
                 <path 
                   d="M 10 65 Q 70 45, 120 30 T 200 60 T 280 40 T 340 30" 
                   fill="none" 
-                  stroke="#fbbf24" 
+                  stroke="#f59e0b" 
                   strokeWidth="2.5" 
                   strokeLinecap="round"
                 />
@@ -390,9 +362,7 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
           </div>
 
           {/* Card 2: Conversion & Performance Stack */}
-          <div style={{ 
-            background: '#09090b', 
-            border: '1px solid rgba(255, 255, 255, 0.08)', 
+          <div className="glass-card" style={{ 
             borderRadius: '16px', 
             padding: '24px', 
             display: 'flex', 
@@ -402,10 +372,10 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
             
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.05em', color: '#718096' }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-text-muted)' }}>
                 {activeChannel.toUpperCase()} CONVERSIONS & TRAFFIC
               </span>
-              <span style={{ color: '#718096', fontSize: '11px' }}>
+              <span style={{ color: 'var(--color-text-muted)', fontSize: '11px' }}>
                 ${(totalConversions * 49).toLocaleString()} Est. Value
               </span>
             </div>
@@ -413,25 +383,25 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
             {/* Metrics */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
-                <span style={{ fontSize: '11px', fontWeight: 600, color: '#34d399', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span style={{ display: 'inline-block', transform: 'rotate(-45deg)' }}>↑</span> Total Conversions
                 </span>
-                <div style={{ fontSize: '36px', fontWeight: 800, color: '#ffffff', marginTop: '4px', letterSpacing: '-0.5px' }}>
+                <div style={{ fontSize: '36px', fontWeight: 800, color: 'var(--color-text)', marginTop: '4px', letterSpacing: '-0.5px' }}>
                   {totalConversions.toLocaleString()}
                 </div>
-                <span style={{ fontSize: '11px', color: '#718096', marginTop: '2px', display: 'block' }}>
+                <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px', display: 'block' }}>
                   Conv. Rate: {avgConversionRate.toFixed(2)}%
                 </span>
               </div>
               
               <div>
-                <span style={{ fontSize: '11px', fontWeight: 600, color: '#60a5fa', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   ⏱️ {activeChannel === 'web' ? 'Avg Time on Page' : (activeChannel === 'social' ? 'Active Posts' : 'Avg Reading Time')}
                 </span>
-                <div style={{ fontSize: '36px', fontWeight: 800, color: '#ffffff', marginTop: '4px', letterSpacing: '-0.5px' }}>
+                <div style={{ fontSize: '36px', fontWeight: 800, color: 'var(--color-text)', marginTop: '4px', letterSpacing: '-0.5px' }}>
                   {activeChannel === 'social' ? totalPieces : `${Math.floor(summary.avgTime / 60)}m ${summary.avgTime % 60}s`}
                 </div>
-                <span style={{ fontSize: '11px', color: '#718096', marginTop: '2px', display: 'block' }}>
+                <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px', display: 'block' }}>
                   {activeChannel === 'web' ? 'GA4 Session Duration' : (activeChannel === 'social' ? 'Indexed in Feed' : 'Average Read Time')}
                 </span>
               </div>
@@ -441,9 +411,9 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
               <div style={{ display: 'flex', gap: '6px' }}>
                 {[1,2,3,4,5,6,7,8,9,10,11,12].map(i => {
-                  let color = '#34d399';
-                  if (i === 4 || i === 8) color = '#fbbf24';
-                  if (i === 11 || i === 12) color = '#3f4e66';
+                  let color = '#10b981';
+                  if (i === 4 || i === 8) color = '#f59e0b';
+                  if (i === 11 || i === 12) color = '#94a3b8';
                   return (
                     <span key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: color }} />
                   );
@@ -456,9 +426,7 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
         </div>
 
         {/* Right Column: Trajectory & Topic Resonance */}
-        <div style={{ 
-          background: '#09090b', 
-          border: '1px solid rgba(255, 255, 255, 0.08)', 
+        <div className="glass-card" style={{ 
           borderRadius: '16px', 
           padding: '24px', 
           display: 'flex', 
@@ -469,10 +437,10 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
           
           {/* Card Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.05em', color: '#718096' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-text-muted)' }}>
               {activeChannel.toUpperCase()} TOPIC RESONANCE & CLUSTERS
             </span>
-            <span style={{ color: '#718096', fontSize: '11px' }}>
+            <span style={{ color: 'var(--color-text-muted)', fontSize: '11px' }}>
               {data.topics.length} Clusters Tracked
             </span>
           </div>
@@ -481,10 +449,10 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
             
             {topTopics.length === 0 ? (
-              <div style={{ textAlign: 'center', color: '#718096', padding: '60px 0', fontSize: '13px' }}>
+              <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '60px 0', fontSize: '13px' }}>
                 No topic data imported for {activeChannel.toUpperCase()} yet. 
                 <br />
-                <Link href={channelHeader.syncLink} style={{ color: '#60a5fa', textDecoration: 'underline', marginTop: '8px', display: 'inline-block' }}>
+                <Link href={channelHeader.syncLink} style={{ color: 'var(--color-primary)', textDecoration: 'underline', marginTop: '8px', display: 'inline-block' }}>
                   Sync your {activeChannel.toUpperCase()} content now →
                 </Link>
               </div>
@@ -493,8 +461,8 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
                 const widthPercent = maxTopicViews > 0 ? (topic.totalViews / maxTopicViews) * 90 : 50;
                 
                 let category: 'High' | 'Medium' | 'Low' = 'Low';
-                let barBg = 'linear-gradient(90deg, #f3f4f6, #d1d5db)';
-                let textColor = '#1f2937';
+                let barBg = 'linear-gradient(90deg, #e2e8f0, #cbd5e1)';
+                let textColor = '#334155';
 
                 if (topic.totalViews >= 10000) {
                   category = 'High';
@@ -508,7 +476,7 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
 
                 return (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', height: '32px' }}>
-                    <div style={{ width: '130px', fontSize: '12px', fontWeight: 600, color: '#e2e8f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '12px' }}>
+                    <div style={{ width: '140px', fontSize: '12px', fontWeight: 600, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '12px' }}>
                       {topic.topic}
                     </div>
 
@@ -550,11 +518,11 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
             display: 'flex', 
             justifyContent: 'space-between', 
             alignItems: 'center', 
-            borderTop: '1px solid rgba(255, 255, 255, 0.05)', 
+            borderTop: '1px solid var(--border-color)', 
             paddingTop: '16px',
             marginTop: '16px',
             fontSize: '11px',
-            color: '#718096'
+            color: 'var(--color-text-muted)'
           }}>
             <div style={{ display: 'flex', gap: '14px' }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
@@ -566,7 +534,7 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
                 Medium Resonance
               </span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ffffff' }}></span>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#94a3b8' }}></span>
                 Low Resonance
               </span>
             </div>
@@ -582,17 +550,17 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
 
       {/* 5. TOP CONTENT STREAM FOR ACTIVE CHANNEL */}
       {data.topItems && data.topItems.length > 0 && (
-        <section className="glass-card" style={{ padding: '24px' }}>
+        <section className="glass-card" style={{ padding: '24px', borderRadius: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <div>
-              <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#ffffff', margin: 0, fontFamily: 'var(--font-display)' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-text)', margin: 0, fontFamily: 'var(--font-display)' }}>
                 Top Performing Content in {activeChannel.toUpperCase()}
               </h3>
-              <p style={{ fontSize: '12px', color: '#718096', marginTop: '2px' }}>
+              <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
                 Ranked by total audience reach and conversions
               </p>
             </div>
-            <Link href={channelHeader.syncLink} style={{ color: '#60a5fa', fontSize: '12px', textDecoration: 'none' }}>
+            <Link href={channelHeader.syncLink} style={{ color: 'var(--color-primary)', fontSize: '12px', textDecoration: 'none', fontWeight: 600 }}>
               + Ingest New Piece →
             </Link>
           </div>
@@ -600,7 +568,7 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: '#718096' }}>
+                <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--color-text-muted)' }}>
                   <th style={{ padding: '10px 12px', fontWeight: 600 }}>CONTENT TITLE / URL</th>
                   <th style={{ padding: '10px 12px', fontWeight: 600 }}>CHANNEL</th>
                   <th style={{ padding: '10px 12px', fontWeight: 600 }}>TOPIC</th>
@@ -612,16 +580,16 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
               </thead>
               <tbody>
                 {data.topItems.map(item => (
-                  <tr key={item.content_id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
+                  <tr key={item.content_id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                     <td style={{ padding: '12px' }}>
-                      <div style={{ fontWeight: 600, color: '#ffffff', marginBottom: '2px' }}>
+                      <div style={{ fontWeight: 600, color: 'var(--color-text)', marginBottom: '2px' }}>
                         {item.title}
                       </div>
                       <a
                         href={item.url}
                         target="_blank"
                         rel="noreferrer"
-                        style={{ fontSize: '11px', color: '#60a5fa', textDecoration: 'none' }}
+                        style={{ fontSize: '11px', color: 'var(--color-primary)', textDecoration: 'none' }}
                       >
                         {item.author ? `${item.author} • ` : ''}{item.url.length > 50 ? `${item.url.substring(0, 50)}...` : item.url}
                       </a>
@@ -630,9 +598,9 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
                       <span style={{
                         padding: '2px 8px',
                         borderRadius: '4px',
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        color: '#e2e8f0',
+                        background: 'var(--bg-base)',
+                        border: '1px solid var(--border-color)',
+                        color: 'var(--color-text)',
                         fontSize: '11px',
                         textTransform: 'uppercase'
                       }}>
@@ -643,24 +611,25 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
                       <span style={{
                         padding: '2px 8px',
                         borderRadius: '4px',
-                        background: 'rgba(59, 130, 246, 0.1)',
-                        border: '1px solid rgba(59, 130, 246, 0.2)',
-                        color: '#60a5fa',
-                        fontSize: '11px'
+                        background: 'var(--color-primary-glow)',
+                        border: '1px solid var(--border-color)',
+                        color: 'var(--color-primary)',
+                        fontSize: '11px',
+                        fontWeight: 600
                       }}>
                         {item.topic || 'Uncategorized'}
                       </span>
                     </td>
-                    <td style={{ padding: '12px', fontWeight: 700, color: '#ffffff' }}>
+                    <td style={{ padding: '12px', fontWeight: 700, color: 'var(--color-text)' }}>
                       {item.views.toLocaleString()}
                     </td>
-                    <td style={{ padding: '12px', color: '#34d399', fontWeight: 600 }}>
+                    <td style={{ padding: '12px', color: 'var(--color-success)', fontWeight: 600 }}>
                       {(item.engagement_rate * 100).toFixed(1)}%
                     </td>
-                    <td style={{ padding: '12px', color: '#a0aec0' }}>
+                    <td style={{ padding: '12px', color: 'var(--color-text-muted)' }}>
                       {item.conversions.toLocaleString()}
                     </td>
-                    <td style={{ padding: '12px', textAlign: 'right', color: '#718096', fontSize: '12px' }}>
+                    <td style={{ padding: '12px', textAlign: 'right', color: 'var(--color-text-muted)', fontSize: '12px' }}>
                       {item.publish_date}
                     </td>
                   </tr>
@@ -672,12 +641,12 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
       )}
 
       {/* 6. EDITORIAL ACTION MATRIX */}
-      <h3 style={{ fontSize: '20px', fontWeight: 800, letterSpacing: '-0.2px', color: '#ffffff', marginTop: '8px', fontFamily: 'var(--font-display)' }}>
+      <h3 style={{ fontSize: '20px', fontWeight: 800, letterSpacing: '-0.2px', color: 'var(--color-text)', marginTop: '8px', fontFamily: 'var(--font-display)' }}>
         AI Editorial Strategy Recommendations ({activeChannel.toUpperCase()})
       </h3>
       <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
         {/* Continue Cards */}
-        <div style={{ background: '#09090b', padding: '24px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)', borderLeft: '4px solid var(--color-success)' }}>
+        <div className="glass-card" style={{ padding: '24px', borderRadius: '12px', borderLeft: '4px solid var(--color-success)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-success)', fontWeight: 700, fontFamily: 'var(--font-display)', fontSize: '15px' }}>
             CONTINUE & AMPLIFY
           </div>
@@ -688,7 +657,7 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
           ) : (
             data.recommendations.filter(r => r.action === 'CONTINUE').map((rec, i) => (
               <div key={i} style={{ marginTop: '16px' }}>
-                <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#ffffff' }}>{rec.target}</h4>
+                <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-text)' }}>{rec.target}</h4>
                 <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '6px', lineHeight: '1.5' }}>
                   {rec.reason}
                 </p>
@@ -698,7 +667,7 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
         </div>
 
         {/* Stop Cards */}
-        <div style={{ background: '#09090b', padding: '24px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)', borderLeft: '4px solid var(--color-error)' }}>
+        <div className="glass-card" style={{ padding: '24px', borderRadius: '12px', borderLeft: '4px solid var(--color-error)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-error)', fontWeight: 700, fontFamily: 'var(--font-display)', fontSize: '15px' }}>
             STOP & REALLOCATE
           </div>
@@ -709,7 +678,7 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
           ) : (
             data.recommendations.filter(r => r.action === 'STOP').map((rec, i) => (
               <div key={i} style={{ marginTop: '16px' }}>
-                <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#ffffff' }}>{rec.target}</h4>
+                <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-text)' }}>{rec.target}</h4>
                 <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '6px', lineHeight: '1.5' }}>
                   {rec.reason}
                 </p>
@@ -719,7 +688,7 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
         </div>
 
         {/* Create Cards */}
-        <div style={{ background: '#09090b', padding: '24px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)', borderLeft: '4px solid var(--color-primary)' }}>
+        <div className="glass-card" style={{ padding: '24px', borderRadius: '12px', borderLeft: '4px solid var(--color-primary)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)', fontWeight: 700, fontFamily: 'var(--font-display)', fontSize: '15px' }}>
             CREATE (OPPORTUNITY GAPS)
           </div>
@@ -730,8 +699,8 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '14px' }}>
               {data.recommendations.filter(r => r.action === 'CREATE').slice(0, 2).map((rec, i) => (
-                <div key={i} style={{ paddingBottom: i === 0 && data.recommendations.filter(r => r.action === 'CREATE').length > 1 ? '12px' : 0, borderBottom: i === 0 && data.recommendations.filter(r => r.action === 'CREATE').length > 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-                  <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#ffffff' }}>{rec.target}</h4>
+                <div key={i} style={{ paddingBottom: i === 0 && data.recommendations.filter(r => r.action === 'CREATE').length > 1 ? '12px' : 0, borderBottom: i === 0 && data.recommendations.filter(r => r.action === 'CREATE').length > 1 ? '1px solid var(--border-color)' : 'none' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-text)' }}>{rec.target}</h4>
                   <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px', lineHeight: '1.4' }}>
                     {rec.reason}
                   </p>
@@ -746,18 +715,18 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
       <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '24px' }}>
         
         {/* Organic Search Content Gaps */}
-        <div style={{ background: '#09090b', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', padding: '24px', overflowX: 'auto' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#ffffff', marginBottom: '4px', fontFamily: 'var(--font-display)' }}>Organic Search Content Gaps</h3>
-          <p style={{ fontSize: '12px', color: '#718096', marginBottom: '20px' }}>
+        <div className="glass-card" style={{ borderRadius: '16px', padding: '24px', overflowX: 'auto' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-text)', marginBottom: '4px', fontFamily: 'var(--font-display)' }}>Organic Search Content Gaps</h3>
+          <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
             GSC queries pulling impressions with high priority for {activeChannel.toUpperCase()}
           </p>
 
           {data.contentGaps.length === 0 ? (
-            <p style={{ fontSize: '13px', color: '#718096', padding: '20px 0' }}>No search queries with uncaptured gaps found.</p>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', padding: '20px 0' }}>No search queries with uncaptured gaps found.</p>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: '#718096' }}>
+                <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--color-text-muted)' }}>
                   <th style={{ padding: '12px 8px' }}>Search Query</th>
                   <th style={{ padding: '12px 8px' }}>Impressions</th>
                   <th style={{ padding: '12px 8px' }}>CTR</th>
@@ -770,8 +739,8 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
                   const scorePct = (gap.priorityScore / maxPriority) * 100;
                   
                   return (
-                    <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                      <td style={{ padding: '14px 8px', fontWeight: 600, color: '#fff' }}>
+                    <tr key={i} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '14px 8px', fontWeight: 600, color: 'var(--color-text)' }}>
                         &ldquo;{gap.query}&rdquo;
                       </td>
                       <td style={{ padding: '14px 8px', fontFamily: 'monospace' }}>{gap.impressions.toLocaleString()}</td>
@@ -779,7 +748,7 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
                       <td style={{ padding: '14px 8px', textAlign: 'right' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
                           <span style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 600 }}>{gap.priorityScore}</span>
-                          <div style={{ width: '50px', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
+                          <div style={{ width: '50px', height: '6px', background: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
                             <div style={{ height: '100%', width: `${scorePct}%`, background: 'var(--color-primary)' }} />
                           </div>
                         </div>
@@ -793,15 +762,15 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
         </div>
 
         {/* Format Performance */}
-        <div style={{ background: '#09090b', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', padding: '24px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#ffffff', marginBottom: '4px', fontFamily: 'var(--font-display)' }}>Format Performance Index</h3>
-          <p style={{ fontSize: '12px', color: '#718096', marginBottom: '24px' }}>
+        <div className="glass-card" style={{ borderRadius: '16px', padding: '24px' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-text)', marginBottom: '4px', fontFamily: 'var(--font-display)' }}>Format Performance Index</h3>
+          <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '24px' }}>
             Percentile ranks comparing content success within {activeChannel.toUpperCase()}
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {data.formats.length === 0 ? (
-              <p style={{ fontSize: '13px', color: '#718096', padding: '20px 0' }}>No format breakdowns available for this channel.</p>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', padding: '20px 0' }}>No format breakdowns available for this channel.</p>
             ) : (
               data.formats.map((f, i) => {
                 const getPlatformDetails = (format: string) => {
@@ -822,12 +791,12 @@ export default function DashboardView({ initialData, initialChannel = 'all' }: D
                 const platform = getPlatformDetails(f.format);
                 
                 return (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'var(--bg-base)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                     <div>
-                      <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#ffffff' }}>
+                      <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-text)' }}>
                         {platform.label}
                       </h4>
-                      <span style={{ fontSize: '11px', color: '#718096', display: 'block', marginTop: '2px' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'block', marginTop: '2px' }}>
                         {f.piecesCount} pieces • {f.totalViews.toLocaleString()} views
                       </span>
                     </div>

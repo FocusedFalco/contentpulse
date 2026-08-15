@@ -114,8 +114,86 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+p, span, div, label {
+  color: inherit;
+}
+
+/* Light Theme Font & Element Optimizations */
+.light-theme h1,
+.light-theme h2,
+.light-theme h3,
+.light-theme h4,
+.light-theme h5,
+.light-theme h6,
+[data-theme='light'] h1,
+[data-theme='light'] h2,
+[data-theme='light'] h3,
+[data-theme='light'] h4,
+[data-theme='light'] h5,
+[data-theme='light'] h6 {
+  color: #0f172a !important;
+}
+
+.light-theme p,
+[data-theme='light'] p {
+  color: #334155;
+}
+
+.light-theme .text-muted,
+[data-theme='light'] .text-muted {
+  color: #64748b !important;
+}
+
+.light-theme table tr:hover,
+[data-theme='light'] table tr:hover {
+  background: #f1f5f9 !important;
+}
+
+.light-theme .markdown-content,
+[data-theme='light'] .markdown-content {
+  color: #1e293b !important;
+}
+
+.light-theme .markdown-content h1,
+.light-theme .markdown-content h2,
+.light-theme .markdown-content h3,
+.light-theme .markdown-content h4,
+[data-theme='light'] .markdown-content h1,
+[data-theme='light'] .markdown-content h2,
+[data-theme='light'] .markdown-content h3,
+[data-theme='light'] .markdown-content h4 {
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+}
+
+.light-theme .markdown-content p,
+.light-theme .markdown-content li,
+[data-theme='light'] .markdown-content p,
+[data-theme='light'] .markdown-content li {
+  color: #334155 !important;
+}
+
+.light-theme .markdown-content strong,
+[data-theme='light'] .markdown-content strong {
+  color: #0f172a !important;
+}
+
+.light-theme .markdown-content blockquote,
+[data-theme='light'] .markdown-content blockquote {
+  background: #f1f5f9 !important;
+  border-left-color: #3b82f6 !important;
+  color: #1e293b !important;
+}
+
+.light-theme .markdown-content code,
+[data-theme='light'] .markdown-content code {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
 }
 
 /* Glassmorphic card styling */

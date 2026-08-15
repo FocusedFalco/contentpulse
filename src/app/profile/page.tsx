@@ -34,7 +34,6 @@ export default function ProfilePage() {
       if (data && data.user) {
         setUser(data.user);
       } else {
-        // Not authenticated -> redirect to auth
         router.push('/auth?mode=signin');
       }
     } catch (e) {
@@ -80,12 +79,12 @@ export default function ProfilePage() {
 
   return (
     <SidebarLayout>
-      <div className="animate-fade-in" style={{ maxWidth: '900px', margin: '0 auto' }}>
+      <div className="animate-fade-in" style={{ maxWidth: '900px', margin: '0 auto', color: 'var(--color-text)' }}>
         
         {/* Header */}
         <header style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <h1 style={{ fontSize: '32px', fontWeight: 800, margin: 0, letterSpacing: '-0.5px' }}>
+            <h1 style={{ fontSize: '32px', fontWeight: 800, margin: 0, letterSpacing: '-0.5px', color: 'var(--color-text)' }}>
               Account Profile
             </h1>
             <p style={{ color: 'var(--color-text-muted)', fontSize: '15px', marginTop: '4px' }}>
@@ -100,7 +99,7 @@ export default function ProfilePage() {
               style={{
                 background: 'rgba(239, 68, 68, 0.1)',
                 border: '1px solid rgba(239, 68, 68, 0.3)',
-                color: '#f87171',
+                color: 'var(--color-error)',
                 padding: '10px 20px',
                 borderRadius: '8px',
                 fontSize: '13px',
@@ -123,7 +122,7 @@ export default function ProfilePage() {
         </header>
 
         {loading ? (
-          <div className="glass-card" style={{ padding: '60px', textAlign: 'center', color: '#718096' }}>
+          <div className="glass-card" style={{ padding: '60px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
             Loading account profile...
           </div>
         ) : user ? (
@@ -149,26 +148,26 @@ export default function ProfilePage() {
 
               <div style={{ flex: 1, minWidth: '240px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                  <h2 style={{ fontSize: '24px', fontWeight: 800, margin: 0, color: '#ffffff' }}>
+                  <h2 style={{ fontSize: '24px', fontWeight: 800, margin: 0, color: 'var(--color-text)' }}>
                     {user.name}
                   </h2>
                   <span style={{
                     fontSize: '11px',
                     padding: '2px 8px',
                     borderRadius: '12px',
-                    background: 'rgba(52, 211, 153, 0.15)',
+                    background: 'var(--color-success-bg)',
                     border: '1px solid rgba(52, 211, 153, 0.3)',
-                    color: '#34d399',
+                    color: 'var(--color-success)',
                     fontWeight: 700
                   }}>
                     ACTIVE SUBSCRIBER
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '14px', color: '#a0aec0' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '14px', color: 'var(--color-text-muted)' }}>
                   <div>📧 {user.email}</div>
                   {user.company && <div>🏢 {user.company}</div>}
-                  <div style={{ fontSize: '12px', color: '#718096', marginTop: '4px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
                     Member since {new Date(user.created_at || Date.now()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   </div>
                 </div>
@@ -178,76 +177,76 @@ export default function ProfilePage() {
             {/* Account Portfolio Stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
               <div className="glass-card" style={{ padding: '20px' }}>
-                <span style={{ fontSize: '12px', color: '#718096', fontWeight: 600, textTransform: 'uppercase' }}>Tracked Items</span>
-                <div style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', marginTop: '4px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Tracked Items</span>
+                <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-text)', marginTop: '4px' }}>
                   {user.stats?.total_items || 0}
                 </div>
-                <span style={{ fontSize: '11px', color: '#60a5fa', marginTop: '2px', display: 'block' }}>All Channels</span>
+                <span style={{ fontSize: '11px', color: 'var(--color-primary)', marginTop: '2px', display: 'block' }}>All Channels</span>
               </div>
 
               <div className="glass-card" style={{ padding: '20px' }}>
-                <span style={{ fontSize: '12px', color: '#718096', fontWeight: 600, textTransform: 'uppercase' }}>Audience Reach</span>
-                <div style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', marginTop: '4px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Audience Reach</span>
+                <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-text)', marginTop: '4px' }}>
                   {(user.stats?.total_views || 0).toLocaleString()}
                 </div>
-                <span style={{ fontSize: '11px', color: '#718096', marginTop: '2px', display: 'block' }}>Total Impressions</span>
+                <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px', display: 'block' }}>Total Impressions</span>
               </div>
 
               <div className="glass-card" style={{ padding: '20px' }}>
-                <span style={{ fontSize: '12px', color: '#718096', fontWeight: 600, textTransform: 'uppercase' }}>Conversions</span>
-                <div style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', marginTop: '4px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Conversions</span>
+                <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-text)', marginTop: '4px' }}>
                   {(user.stats?.total_conversions || 0).toLocaleString()}
                 </div>
-                <span style={{ fontSize: '11px', color: '#34d399', marginTop: '2px', display: 'block' }}>${((user.stats?.total_conversions || 0) * 49).toLocaleString()} Est. Value</span>
+                <span style={{ fontSize: '11px', color: 'var(--color-success)', marginTop: '2px', display: 'block' }}>${((user.stats?.total_conversions || 0) * 49).toLocaleString()} Est. Value</span>
               </div>
 
               <div className="glass-card" style={{ padding: '20px' }}>
-                <span style={{ fontSize: '12px', color: '#718096', fontWeight: 600, textTransform: 'uppercase' }}>AI Reports</span>
-                <div style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', marginTop: '4px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>AI Reports</span>
+                <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--color-text)', marginTop: '4px' }}>
                   {user.stats?.total_reports || 0}
                 </div>
-                <span style={{ fontSize: '11px', color: '#a78bfa', marginTop: '2px', display: 'block' }}>Synthesized</span>
+                <span style={{ fontSize: '11px', color: 'var(--color-secondary)', marginTop: '2px', display: 'block' }}>Synthesized</span>
               </div>
             </div>
 
             {/* Quick Links & Channel Connections */}
             <div className="glass-card" style={{ padding: '32px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '16px', color: '#ffffff' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '16px', color: 'var(--color-text)' }}>
                 Connected Monitoring Channels
               </h3>
               
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
                 <Link href="/web" style={{ textDecoration: 'none' }}>
-                  <div style={{ padding: '16px', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', transition: 'all 0.2s' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#34d399', fontWeight: 700, marginBottom: '6px' }}>
+                  <div style={{ padding: '16px', borderRadius: '8px', background: 'var(--bg-base)', border: '1px solid var(--border-color)', transition: 'all 0.2s' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-success)', fontWeight: 700, marginBottom: '6px' }}>
                       <span>🌐</span>
                       <span>Web & Blog Channel</span>
                     </div>
-                    <p style={{ fontSize: '12px', color: '#718096', margin: 0 }}>
+                    <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', margin: 0 }}>
                       Manage connected web articles and GA4 signals →
                     </p>
                   </div>
                 </Link>
 
                 <Link href="/social" style={{ textDecoration: 'none' }}>
-                  <div style={{ padding: '16px', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', transition: 'all 0.2s' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#60a5fa', fontWeight: 700, marginBottom: '6px' }}>
+                  <div style={{ padding: '16px', borderRadius: '8px', background: 'var(--bg-base)', border: '1px solid var(--border-color)', transition: 'all 0.2s' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-primary)', fontWeight: 700, marginBottom: '6px' }}>
                       <span>💬</span>
                       <span>Social Media & YouTube</span>
                     </div>
-                    <p style={{ fontSize: '12px', color: '#718096', margin: 0 }}>
+                    <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', margin: 0 }}>
                       Manage connected social accounts and feeds →
                     </p>
                   </div>
                 </Link>
 
                 <Link href="/newsletter" style={{ textDecoration: 'none' }}>
-                  <div style={{ padding: '16px', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', transition: 'all 0.2s' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#22d3ee', fontWeight: 700, marginBottom: '6px' }}>
+                  <div style={{ padding: '16px', borderRadius: '8px', background: 'var(--bg-base)', border: '1px solid var(--border-color)', transition: 'all 0.2s' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-secondary)', fontWeight: 700, marginBottom: '6px' }}>
                       <span>✉️</span>
                       <span>Newsletter Publications</span>
                     </div>
-                    <p style={{ fontSize: '12px', color: '#718096', margin: 0 }}>
+                    <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', margin: 0 }}>
                       Manage Substack and email publications →
                     </p>
                   </div>
@@ -258,7 +257,7 @@ export default function ProfilePage() {
             {/* Danger Zone: Sign Out */}
             <div className="glass-card" style={{ padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
               <div>
-                <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#ffffff', margin: '0 0 4px 0' }}>
+                <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-text)', margin: '0 0 4px 0' }}>
                   Active Session
                 </h4>
                 <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', margin: 0 }}>
@@ -270,7 +269,7 @@ export default function ProfilePage() {
                 onClick={handleSignOut}
                 disabled={signingOut}
                 style={{
-                  background: '#ef4444',
+                  background: 'var(--color-error)',
                   color: '#ffffff',
                   border: 'none',
                   padding: '10px 24px',
