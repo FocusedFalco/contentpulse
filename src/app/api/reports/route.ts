@@ -7,10 +7,16 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
+    const channel = searchParams.get('channel');
+
+    // Auto-migrate column if needed
+    try {
+      await query('ALTER TABLE reports ADD COLUMN IF NOT EXISTS channel VARCHAR(50) DEFAULT \'all\'');
+    } catch (e) {}
 
     if (id) {
       const res = await query(
-        'SELECT id, created_at, title, narrative, metrics_summary FROM reports WHERE id = $1',
+        'SELECT id, created_at, title, channel, narrative, metrics_summary FROM reports WHERE id = $1',
         [parseInt(id, 10)]
       );
       if (res.rows.length === 0) {
@@ -19,9 +25,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(res.rows[0]);
     }
 
-    const res = await query(
-      'SELECT id, created_at, title FROM reports ORDER BY created_at DESC'
-    );
+    let sql = 'SELECT id, created_at, title, COALESCE(channel, \'all\') as channel FROM reports';
+    const params: any[] = [];
+
+    if (channel && channel !== 'all') {
+      sql += ' WHERE LOWER(COALESCE(channel, \'all\')) = LOWER($1)';
+      params.push(channel);
+    }
+
+    sql += ' ORDER BY created_at DESC';
+
+    const res = await query(sql, params);
     return NextResponse.json(res.rows);
   } catch (err: any) {
     return NextResponse.json(
@@ -31,13 +45,22 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
-    // 1. Run database metrics aggregation
-    const analysisData = await runAnalysis();
+    let body = {};
+    try {
+      body = await req.json();
+    } catch (e) {
+      body = {};
+    }
 
-    // 2. Call Gemini (or simulation fallback) to write narrative
-    const report = await generateEditorialReport(analysisData);
+    const { channel = 'all' } = body as { channel?: string };
+
+    // 1. Run database metrics aggregation specifically for this channel
+    const analysisData = await runAnalysis(channel);
+
+    // 2. Call Gemini (or simulation fallback) to write narrative tailored to this channel
+    const report = await generateEditorialReport(analysisData, channel);
 
     return NextResponse.json({
       success: true,

@@ -3,46 +3,63 @@
 import React, { useState, useEffect } from 'react';
 import { marked } from 'marked';
 import SidebarLayout from '../SidebarLayout';
+import Link from 'next/link';
 
 interface ReportArchiveItem {
   id: number;
   created_at: string;
   title: string;
+  channel?: string;
 }
 
 interface FullReport {
   id: number;
   created_at: string;
   title: string;
+  channel?: string;
   narrative: string;
   metrics_summary: any;
 }
+
+const REPORT_CHANNELS = [
+  { key: 'all', label: 'All Reports', icon: '📊' },
+  { key: 'web', label: 'Web', icon: '🌐' },
+  { key: 'social', label: 'Social', icon: '💬' },
+  { key: 'newsletter', label: 'Newsletter', icon: '✉️' },
+  { key: 'youtube', label: 'YouTube', icon: '🎬' }
+];
 
 export default function ReportsPage() {
   const [reports, setReports] = useState<ReportArchiveItem[]>([]);
   const [activeReport, setActiveReport] = useState<FullReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<number | null>(null);
+  const [selectedChannel, setSelectedChannel] = useState<string>('all');
+  const [generateChannel, setGenerateChannel] = useState<string>('all');
   
   // Report generation progress state
   const [generating, setGenerating] = useState(false);
   const [genSteps, setGenSteps] = useState<{ label: string; status: 'pending' | 'running' | 'done' | 'error' }[]>([
-    { label: 'Querying content performance metrics...', status: 'pending' },
+    { label: 'Querying channel metrics & content items...', status: 'pending' },
     { label: 'Normalizing format percentiles & topic eligibility...', status: 'pending' },
-    { label: 'Aggregating Search Console content gaps...', status: 'pending' },
-    { label: 'Prompting Gemini AI Narrative Engine...', status: 'pending' },
-    { label: 'Writing strategy & recommendations report...', status: 'pending' },
+    { label: 'Synthesizing channel opportunity gaps...', status: 'pending' },
+    { label: 'Prompting Gemini AI Strategy Engine...', status: 'pending' },
+    { label: 'Composing decision-ready markdown report...', status: 'pending' },
   ]);
 
-  // Load report list
-  const fetchReports = async (selectLatest = false) => {
+  // Load report list filtered by channel
+  const fetchReports = async (channelKey = selectedChannel, selectLatest = false) => {
     try {
-      const res = await fetch('/api/reports');
+      const url = channelKey === 'all' ? '/api/reports' : `/api/reports?channel=${channelKey}`;
+      const res = await fetch(url);
       const data = await res.json();
       if (Array.isArray(data)) {
         setReports(data);
         if (selectLatest && data.length > 0) {
           loadReport(data[0].id);
+        } else if (data.length === 0) {
+          setActiveReport(null);
+          setActiveTab(null);
         }
       }
     } catch (err) {
@@ -68,11 +85,17 @@ export default function ReportsPage() {
   };
 
   useEffect(() => {
-    fetchReports(true);
+    fetchReports('all', true);
   }, []);
 
+  const handleChannelFilterChange = (ch: string) => {
+    setSelectedChannel(ch);
+    setGenerateChannel(ch);
+    fetchReports(ch, true);
+  };
+
   // Trigger report generation with step-by-step progress simulation
-  const handleGenerateReport = async () => {
+  const handleGenerateReport = async (targetChannel: string = generateChannel) => {
     setGenerating(true);
     setGenSteps(steps => steps.map(s => ({ ...s, status: 'pending' })));
 
@@ -85,43 +108,40 @@ export default function ReportsPage() {
     };
 
     try {
-      // Step 1: Querying metrics
       runStep(0);
-      await new Promise(r => setTimeout(r, 1200));
+      await new Promise(r => setTimeout(r, 900));
 
-      // Step 2: Normalizing
       runStep(1);
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 800));
 
-      // Step 3: GSC Gaps
       runStep(2);
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 800));
 
-      // Step 4: Prompting Gemini
       runStep(3);
       
-      // Make the actual API POST call during Step 4/5
-      const res = await fetch('/api/reports', { method: 'POST' });
+      const res = await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channel: targetChannel })
+      });
       const data = await res.json();
       
       if (!data.success) {
         throw new Error(data.error || 'Gemini generation failed.');
       }
 
-      // Step 5: Finished
       runStep(4);
       setGenSteps(steps => steps.map(s => ({ ...s, status: 'done' })));
-      await new Promise(r => setTimeout(r, 800));
+      await new Promise(r => setTimeout(r, 600));
 
-      // Re-fetch report list and load the new one
-      await fetchReports();
-      if (data.report) {
-        // Find latest ID and load
-        const latestRes = await fetch('/api/reports');
-        const latestList = await latestRes.json();
-        if (latestList.length > 0) {
-          loadReport(latestList[0].id);
-        }
+      // Refresh reports for current channel filter
+      await fetchReports(selectedChannel);
+      
+      // Load the newly generated report
+      const latestRes = await fetch(`/api/reports?channel=${targetChannel}`);
+      const latestList = await latestRes.json();
+      if (latestList && latestList.length > 0) {
+        loadReport(latestList[0].id);
       }
     } catch (err: any) {
       console.error('Failed generating report:', err);
@@ -134,10 +154,8 @@ export default function ReportsPage() {
 
   // Convert markdown to HTML using marked.js
   const getHtmlContent = (markdown: string) => {
-    // Basic pre-processing of custom github alert blocks so they look like nice cards
     let processedMarkdown = markdown;
     
-    // Replace GitHub alerts: > [!NOTE] -> **Note:** etc.
     processedMarkdown = processedMarkdown
       .replace(/>\s*\[!NOTE\]/gi, '***💡 NOTE:***')
       .replace(/>\s*\[!TIP\]/gi, '***💡 TIP:***')
@@ -148,254 +166,279 @@ export default function ReportsPage() {
     try {
       const html = marked.parse(processedMarkdown);
       return typeof html === 'string' ? html : '';
-    } catch (err) {
-      return `<p>${markdown}</p>`;
+    } catch (e) {
+      return `<pre style="white-space: pre-wrap;">${markdown}</pre>`;
+    }
+  };
+
+  const getChannelBadge = (ch?: string) => {
+    switch (ch?.toLowerCase()) {
+      case 'social':
+        return { label: 'SOCIAL', color: '#60a5fa', bg: 'rgba(59, 130, 246, 0.15)', border: 'rgba(59, 130, 246, 0.3)' };
+      case 'newsletter':
+        return { label: 'NEWSLETTER', color: '#22d3ee', bg: 'rgba(6, 182, 212, 0.15)', border: 'rgba(6, 182, 212, 0.3)' };
+      case 'web':
+        return { label: 'WEB', color: '#34d399', bg: 'rgba(52, 211, 153, 0.15)', border: 'rgba(52, 211, 153, 0.3)' };
+      case 'youtube':
+        return { label: 'YOUTUBE', color: '#f87171', bg: 'rgba(248, 113, 113, 0.15)', border: 'rgba(248, 113, 113, 0.3)' };
+      default:
+        return { label: 'UNIFIED', color: '#a78bfa', bg: 'rgba(167, 139, 250, 0.15)', border: 'rgba(167, 139, 250, 0.3)' };
     }
   };
 
   return (
     <SidebarLayout>
-      <div className="animate-fade-in">
-      <header style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: 700, margin: 0 }}>Editorial Strategy Reports</h1>
-        <p style={{ color: 'var(--color-text-muted)', fontSize: '15px', marginTop: '4px' }}>
-          Archived reports synthesized by the ContentPulse Gemini Narrative Layer
-        </p>
-      </header>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '32px', alignItems: 'start' }}>
+      <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
-        {/* 1. Sidebar Section */}
-        <aside style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <button 
-            onClick={handleGenerateReport} 
-            disabled={generating}
-            className="glow-btn glow-btn-primary"
-            style={{ width: '100%', justifyContent: 'center', padding: '12px' }}
-          >
-            {generating ? 'Generating...' : 'Generate New Report'}
-          </button>
+        {/* Page Header */}
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <h1 style={{ fontSize: '32px', fontWeight: 700, margin: 0, letterSpacing: '-0.5px' }}>
+              Editorial Strategy Reports
+            </h1>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: '15px', marginTop: '4px' }}>
+              AI strategy and recommendations synthesized separately for each channel by the ContentPulse Gemini Narrative Layer
+            </p>
+          </div>
 
-          <div className="glass-card" style={{ padding: '20px' }}>
-            <h3 style={{ fontSize: '15px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
-              Report Archive
+          {/* Generator Controls */}
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <select
+              value={generateChannel}
+              onChange={e => setGenerateChannel(e.target.value)}
+              disabled={generating}
+              style={{
+                background: '#09090b',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                color: '#ffffff',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                fontSize: '13px',
+                fontWeight: 600,
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="all">📊 Unified Portfolio</option>
+              <option value="web">🌐 Web Channel</option>
+              <option value="social">💬 Social Channel</option>
+              <option value="newsletter">✉️ Newsletter Channel</option>
+              <option value="youtube">🎬 YouTube Channel</option>
+            </select>
+
+            <button 
+              onClick={() => handleGenerateReport(generateChannel)}
+              disabled={generating}
+              className="glow-btn glow-btn-primary"
+              style={{ 
+                padding: '10px 20px', 
+                fontSize: '13px', 
+                fontWeight: 600,
+                opacity: generating ? 0.6 : 1,
+                cursor: generating ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {generating ? 'Synthesizing Report...' : `✨ Generate ${generateChannel.toUpperCase()} Report`}
+            </button>
+          </div>
+        </header>
+
+        {/* Channel Filter Tab Bar */}
+        <div style={{
+          background: '#09090b',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '12px',
+          padding: '6px',
+          display: 'flex',
+          gap: '6px',
+          flexWrap: 'wrap',
+          alignItems: 'center'
+        }}>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: '#718096', padding: '0 10px', textTransform: 'uppercase' }}>
+            Filter Archive:
+          </span>
+          {REPORT_CHANNELS.map(ch => {
+            const active = selectedChannel === ch.key;
+            return (
+              <button
+                key={ch.key}
+                type="button"
+                onClick={() => handleChannelFilterChange(ch.key)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 14px',
+                  borderRadius: '6px',
+                  background: active ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                  border: active ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid transparent',
+                  color: active ? '#ffffff' : '#a0aec0',
+                  fontWeight: active ? 600 : 400,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <span>{ch.icon}</span>
+                <span>{ch.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Generation Progress Overlay Card */}
+        {generating && (
+          <div className="glass-card" style={{ padding: '24px', borderLeft: '4px solid var(--color-primary)' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="spinner" style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.2)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span>
+              Synthesizing {generateChannel.toUpperCase()} Editorial Strategy Report...
             </h3>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto' }}>
-              {reports.length === 0 ? (
-                <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', padding: '12px', textAlign: 'center' }}>
-                  No reports generated yet.
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {genSteps.map((step, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px' }}>
+                  <div style={{ width: '18px', textAlign: 'center' }}>
+                    {step.status === 'done' && <span style={{ color: 'var(--color-success)' }}>✓</span>}
+                    {step.status === 'running' && <span style={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>●</span>}
+                    {step.status === 'pending' && <span style={{ color: 'var(--color-text-muted)' }}>○</span>}
+                    {step.status === 'error' && <span style={{ color: 'var(--color-error)' }}>✕</span>}
+                  </div>
+                  <span style={{ 
+                    color: step.status === 'running' ? '#fff' : (step.status === 'done' ? '#e5e7eb' : 'var(--color-text-muted)'),
+                    fontWeight: step.status === 'running' ? 600 : 400
+                  }}>
+                    {step.label}
+                  </span>
                 </div>
-              ) : (
-                reports.map(rep => {
-                  const date = new Date(rep.created_at).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  });
-                  const isActive = activeTab === rep.id;
-                  
-                  return (
-                    <button
-                      key={rep.id}
-                      onClick={() => loadReport(rep.id)}
-                      style={{
-                        textAlign: 'left',
-                        padding: '12px',
-                        borderRadius: '8px',
-                        background: isActive ? 'var(--color-primary-glow)' : 'transparent',
-                        border: `1px solid ${isActive ? 'var(--color-primary)' : 'var(--border-color)'}`,
-                        color: isActive ? '#fff' : 'var(--color-text-muted)',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                      }}
-                      className="archive-item-btn"
-                    >
-                      <div style={{ fontWeight: 600, fontSize: '13px', color: isActive ? '#fff' : 'var(--color-text)' }}>
-                        {rep.title}
-                      </div>
-                      <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
-                        {date}
-                      </div>
-                    </button>
-                  );
-                })
-              )}
+              ))}
             </div>
           </div>
-        </aside>
+        )}
 
-        {/* 2. Main Narrative View Section */}
-        <section style={{ position: 'relative' }}>
+        {/* Main Content Area: Split List & Document */}
+        <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '24px', alignItems: 'start' }}>
           
-          {/* Progress Modal Overlay for Generation */}
-          {generating && (
-            <div className="glass-card animate-fade-in" style={{ padding: '40px', background: 'rgba(0, 0, 0, 0.95)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '24px', minHeight: '380px', justifyContent: 'center' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ display: 'inline-block', width: '40px', height: '40px', border: '4px solid var(--color-primary-glow)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '16px' }} />
-                <h3 style={{ fontSize: '20px', fontFamily: 'var(--font-display)' }}>Synthesizing Editorial Intelligence</h3>
-                <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
-                  Connecting multi-channel performance to Gemini LLM narrative prompt...
-                </p>
-              </div>
-
-              <div style={{ maxWidth: '450px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {genSteps.map((step, idx) => (
-                  <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px', padding: '10px 14px', borderRadius: '8px', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.04)' }}>
-                    <span style={{ color: step.status === 'done' ? 'var(--color-text)' : 'var(--color-text-muted)' }}>
-                      {step.label}
-                    </span>
-                    <span>
-                      {step.status === 'pending' && <span style={{ opacity: 0.3 }}>⏳</span>}
-                      {step.status === 'running' && <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>Running...</span>}
-                      {step.status === 'done' && <span style={{ color: 'var(--color-success)' }}>✅ Done</span>}
-                      {step.status === 'error' && <span style={{ color: 'var(--color-error)' }}>❌ Error</span>}
-                    </span>
-                  </div>
-                ))}
-              </div>
+          {/* Left: Report Archive List */}
+          <aside className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: 'calc(100vh - 280px)', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                {selectedChannel.toUpperCase()} REPORTS ({reports.length})
+              </span>
             </div>
-          )}
 
-          {/* Normal Report Viewer */}
-          {!generating && (
-            <div className="glass-card" style={{ padding: '40px', minHeight: '520px', background: 'rgba(9, 9, 11, 0.75)' }}>
-              {loading ? (
-                <div style={{ display: 'flex', flexDirection: 'column', height: '300px', justifyContent: 'center', alignItems: 'center' }}>
-                  <div style={{ display: 'inline-block', width: '32px', height: '32px', border: '3px solid rgba(255,255,255,0.05)', borderTopColor: 'var(--color-secondary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-                  <p style={{ marginTop: '12px', fontSize: '14px', color: 'var(--color-text-muted)' }}>Loading report narrative...</p>
-                </div>
-              ) : activeReport ? (
-                <div className="report-narrative-content">
-                  <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '20px', marginBottom: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
-                    <div>
-                      <h2 style={{ fontSize: '24px', fontWeight: 800, fontFamily: 'var(--font-display)', color: '#fff' }}>
-                        {activeReport.title}
-                      </h2>
-                      <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
-                        Synthesized on {new Date(activeReport.created_at).toLocaleDateString('en-US', {
-                          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                        })}
-                      </div>
-                    </div>
-                    {/* Visual Badge showing if database values were loaded */}
-                    <div style={{ fontSize: '11px', background: 'var(--color-success-bg)', border: '1px solid var(--color-success)', color: 'var(--color-success)', padding: '4px 10px', borderRadius: '20px', fontWeight: 600 }}>
-                      📊 Data Grounded
-                    </div>
-                  </div>
-
-                  {/* Rendered HTML */}
+            {reports.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--color-text-muted)', fontSize: '13px' }}>
+                No {selectedChannel === 'all' ? '' : selectedChannel} reports generated yet. Click Generate above to create one!
+              </div>
+            ) : (
+              reports.map(rep => {
+                const badge = getChannelBadge(rep.channel);
+                return (
                   <div 
-                    dangerouslySetInnerHTML={{ __html: getHtmlContent(activeReport.narrative) }} 
-                    className="markdown-body"
-                  />
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', height: '400px', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '40px' }}>
-                  <h3 style={{ fontSize: '20px', fontWeight: 700 }}>No Strategy Reports Found</h3>
-                  <p style={{ color: 'var(--color-text-muted)', maxWidth: '400px', fontSize: '14px', marginTop: '8px', lineHeight: '1.6' }}>
-                    Generate your first report to trigger the ContentPulse Analysis Engine and let Gemini write a decision-ready editorial strategy.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
+                    key={rep.id}
+                    onClick={() => loadReport(rep.id)}
+                    style={{
+                      padding: '14px 16px',
+                      borderRadius: '8px',
+                      background: activeTab === rep.id ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)',
+                      border: `1px solid ${activeTab === rep.id ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.04)'}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      borderLeft: activeTab === rep.id ? `3px solid ${badge.color}` : '1px solid rgba(255,255,255,0.04)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{
+                        fontSize: '9px',
+                        fontWeight: 700,
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        background: badge.bg,
+                        color: badge.color,
+                        border: `1px solid ${badge.border}`
+                      }}>
+                        {badge.label}
+                      </span>
+                      <span style={{ fontSize: '11px', color: '#718096' }}>
+                        {new Date(rep.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
 
-      </div>
+                    <h4 style={{ fontSize: '13px', fontWeight: 600, color: activeTab === rep.id ? '#ffffff' : '#e2e8f0', margin: 0, lineHeight: '1.4' }}>
+                      {rep.title}
+                    </h4>
+                  </div>
+                );
+              })
+            )}
+          </aside>
 
-      {/* Styled JSX/CSS for Markdown Rendering */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-        @keyframes spin-back {
-          to { transform: rotate(-360deg); }
-        }
-        .archive-item-btn:hover {
-          background: rgba(255, 255, 255, 0.02) !important;
-          border-color: var(--border-color-hover) !important;
-        }
-        
-        /* Markdown rendering rules */
-        .markdown-body {
-          line-height: 1.7;
-          font-size: 15px;
-          color: #e5e7eb;
-        }
-        .markdown-body h1 {
-          font-size: 22px;
-          margin-top: 32px;
-          margin-bottom: 16px;
-          color: #fff;
-          border-bottom: 1px solid var(--border-color);
-          padding-bottom: 8px;
-        }
-        .markdown-body h2 {
-          font-size: 18px;
-          margin-top: 24px;
-          margin-bottom: 12px;
-          color: #fff;
-        }
-        .markdown-body h3 {
-          font-size: 15px;
-          margin-top: 20px;
-          margin-bottom: 8px;
-          color: #fff;
-        }
-        .markdown-body p {
-          margin-bottom: 16px;
-        }
-        .markdown-body ul, .markdown-body ol {
-          margin-bottom: 16px;
-          padding-left: 20px;
-        }
-        .markdown-body li {
-          margin-bottom: 6px;
-        }
-        .markdown-body hr {
-          border: 0;
-          height: 1px;
-          background: var(--border-color);
-          margin: 28px 0;
-        }
-        .markdown-body strong {
-          color: #fff;
-        }
-        .markdown-body table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-bottom: 20px;
-        }
-        .markdown-body th, .markdown-body td {
-          border: 1px solid var(--border-color);
-          padding: 10px;
-          text-align: left;
-        }
-        .markdown-body th {
-          background: rgba(255,255,255,0.02);
-        }
-        
-        /* Styled alerts from github preprocessing */
-        .markdown-body p:has(em:first-child) {
-          padding: 16px;
-          border-radius: 10px;
-          background: rgba(255,255,255,0.02);
-          border: 1px solid var(--border-color);
-          margin: 20px 0;
-        }
-        .markdown-body p:has(em:contains('IMPORTANT')), .markdown-body p:has(em:contains('WARNING')) {
-          border-left: 4px solid var(--color-warning);
-          background: var(--color-warning-bg);
-          border-color: var(--color-warning);
-        }
-        .markdown-body p:has(em:contains('TIP')) {
-          border-left: 4px solid var(--color-primary);
-          background: var(--color-primary-glow);
-          border-color: var(--color-primary);
-        }
-      `}} />
+          {/* Right: Active Document Reader */}
+          <main className="glass-card" style={{ padding: '40px', minHeight: '600px' }}>
+            {loading ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '300px', color: 'var(--color-text-muted)' }}>
+                Loading report narrative...
+              </div>
+            ) : activeReport ? (
+              <article style={{ maxWidth: '800px' }}>
+                {/* Document Header */}
+                <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '24px', marginBottom: '32px' }}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '12px' }}>
+                    {(() => {
+                      const badge = getChannelBadge(activeReport.channel);
+                      return (
+                        <span style={{
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          padding: '3px 8px',
+                          borderRadius: '4px',
+                          background: badge.bg,
+                          color: badge.color,
+                          border: `1px solid ${badge.border}`
+                        }}>
+                          {badge.label} CHANNEL STRATEGY
+                        </span>
+                      );
+                    })()}
+                    <span style={{ fontSize: '12px', color: '#718096' }}>
+                      Generated {new Date(activeReport.created_at).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <h2 style={{ fontSize: '28px', fontWeight: 800, margin: 0, letterSpacing: '-0.5px', color: '#ffffff' }}>
+                    {activeReport.title}
+                  </h2>
+                </div>
+
+                {/* Document Body (Markdown Rendered) */}
+                <div 
+                  className="markdown-content"
+                  style={{ fontSize: '15px', lineHeight: '1.75', color: '#e5e7eb' }}
+                  dangerouslySetInnerHTML={{ __html: getHtmlContent(activeReport.narrative) }}
+                />
+              </article>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '100px 0', color: 'var(--color-text-muted)' }}>
+                <div style={{ fontSize: '40px', marginBottom: '16px' }}>📄</div>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#ffffff', marginBottom: '6px' }}>
+                  No Strategy Report Selected
+                </h3>
+                <p style={{ fontSize: '13px', color: '#718096', maxWidth: '400px', margin: '0 auto 20px auto' }}>
+                  Select a report from the archive on the left or generate a new channel-specific report.
+                </p>
+                <button
+                  onClick={() => handleGenerateReport(selectedChannel)}
+                  className="glow-btn glow-btn-primary"
+                  style={{ fontSize: '13px', padding: '8px 18px' }}
+                >
+                  Generate {selectedChannel.toUpperCase()} Report
+                </button>
+              </div>
+            )}
+          </main>
+
+        </div>
+
       </div>
     </SidebarLayout>
   );
