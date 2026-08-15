@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
         const insertRes = await query(
           `INSERT INTO content_items (title, channel, format, word_count, duration, publish_date, author, url)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING content_id`,
-          [videoTitle, 'youtube', 'video', null, stats.duration, publishDateStr, videoAuthor, videoUrl]
+          [videoTitle, requestedChannel === 'social' ? 'social' : 'youtube', 'video', null, stats.duration, publishDateStr, videoAuthor, videoUrl]
         );
         const contentId = insertRes.rows[0].content_id;
 

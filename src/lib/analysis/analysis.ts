@@ -139,9 +139,11 @@ export async function runAnalysis(channelFilter: string = 'all'): Promise<Struct
   const totalAllViews = availableChannels.reduce((acc, c) => acc + c.views, 0);
   const totalAllPieces = availableChannels.reduce((acc, c) => acc + c.count, 0);
 
+  const isSocial = selectedChannel === 'social';
+
   // 2. Topic Aggregation with Sample-Size Guardrails & Recency Weighting
-  const topicFilterClause = isAll ? '' : 'WHERE LOWER(i.channel) = $1';
-  const topicParams = isAll ? [] : [selectedChannel];
+  const topicFilterClause = isAll ? '' : (isSocial ? "WHERE LOWER(i.channel) IN ('social', 'youtube')" : 'WHERE LOWER(i.channel) = $1');
+  const topicParams = isAll || isSocial ? [] : [selectedChannel];
 
   const topicSql = `
     WITH raw_daily AS (
@@ -214,8 +216,8 @@ export async function runAnalysis(channelFilter: string = 'all'): Promise<Struct
   });
 
   // 3. Format Percentile Normalization
-  const formatFilterClause = isAll ? '' : 'WHERE LOWER(i.channel) = $1';
-  const formatParams = isAll ? [] : [selectedChannel];
+  const formatFilterClause = isAll ? '' : (isSocial ? "WHERE LOWER(i.channel) IN ('social', 'youtube')" : 'WHERE LOWER(i.channel) = $1');
+  const formatParams = isAll || isSocial ? [] : [selectedChannel];
 
   const formatSql = `
     WITH content_totals AS (
@@ -399,8 +401,8 @@ export async function runAnalysis(channelFilter: string = 'all'): Promise<Struct
   });
 
   // 7. Top Content Items for Selected Channel
-  const topItemsFilter = isAll ? '' : 'WHERE LOWER(c.channel) = $1';
-  const topItemsParams = isAll ? [] : [selectedChannel];
+  const topItemsFilter = isAll ? '' : (isSocial ? "WHERE LOWER(c.channel) IN ('social', 'youtube')" : 'WHERE LOWER(c.channel) = $1');
+  const topItemsParams = isAll || isSocial ? [] : [selectedChannel];
 
   const topItemsRes = await query(`
     SELECT 
@@ -443,8 +445,8 @@ export async function runAnalysis(channelFilter: string = 'all'): Promise<Struct
   }));
 
   // 8. Channel Summary Metrics Aggregation
-  const summaryFilter = isAll ? '' : 'WHERE LOWER(i.channel) = $1';
-  const summaryParams = isAll ? [] : [selectedChannel];
+  const summaryFilter = isAll ? '' : (isSocial ? "WHERE LOWER(i.channel) IN ('social', 'youtube')" : 'WHERE LOWER(i.channel) = $1');
+  const summaryParams = isAll || isSocial ? [] : [selectedChannel];
 
   const summaryRes = await query(`
     SELECT 
