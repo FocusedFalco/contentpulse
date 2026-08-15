@@ -12,7 +12,11 @@ export async function POST(req: NextRequest) {
 
     url = url.trim();
     if (url.startsWith('@')) {
-      url = `https://x.com/${url.replace(/^@+/, '')}`;
+      if (requestedChannel === 'social') {
+        url = `https://www.youtube.com/@${url.replace(/^@+/, '')}`;
+      } else {
+        url = `https://x.com/${url.replace(/^@+/, '')}`;
+      }
     } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
       url = `https://${url}`;
     }
@@ -41,71 +45,73 @@ export async function POST(req: NextRequest) {
         }, { status: 400 });
       }
 
-      // 1. Fetch channel page to extract channel ID
       let channelId = '';
-      try {
-        const channelPageRes = await fetch(url, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+
+      // 1. If handle is in URL, immediately use official forHandle endpoint (Fast & 100% accurate)
+      const handleMatch = url.match(/youtube\.com\/@([a-zA-Z0-9_\-\.]+)/i);
+      if (handleMatch) {
+        const rawHandle = handleMatch[1];
+        try {
+          const handleUrl = `https://www.googleapis.com/youtube/v3/channels?key=${youtubeApiKey}&forHandle=${encodeURIComponent(rawHandle)}&part=id,snippet`;
+          const handleRes = await fetch(handleUrl, { signal: AbortSignal.timeout(4000) });
+          const handleData = await handleRes.json();
+          if (handleData.items && handleData.items.length > 0) {
+            channelId = handleData.items[0].id;
+            console.log(`Resolved exact Channel ID via forHandle: ${channelId} (${handleData.items[0].snippet?.title})`);
           }
-        });
-        if (channelPageRes.ok) {
-          const channelHtml = await channelPageRes.text();
-          const channelIdMatch = channelHtml.match(/meta itemprop="channelId" content="([^"]+)"/i) || 
-                                 channelHtml.match(/"channelId":"([^"]+)"/i);
-          if (channelIdMatch) {
-            channelId = channelIdMatch[1];
-          }
+        } catch (err) {
+          console.warn('Fast forHandle lookup failed, falling back:', err);
         }
-      } catch (err) {
-        console.warn('Failed to scrape channel ID from HTML, will try direct search:', err);
       }
 
-      // If we couldn't parse the channel ID from HTML, resolve it directly from the handle via Channels API
+      // 2. Direct channel ID in URL (e.g. /channel/UC...)
+      if (!channelId) {
+        const channelIdUrlMatch = url.match(/youtube\.com\/channel\/([a-zA-Z0-9_\-]+)/i);
+        if (channelIdUrlMatch) {
+          channelId = channelIdUrlMatch[1];
+        }
+      }
+
+      // 3. Fallback: Quick HTML scan with strict 3-second timeout
       if (!channelId) {
         try {
-          const handleMatch = url.match(/youtube\.com\/@([a-zA-Z0-9_\-\.]+)/i);
-          if (handleMatch) {
-            const rawHandle = handleMatch[1];
-            // 1. Exact forHandle lookup (100% precision)
-            const handleUrl = `https://www.googleapis.com/youtube/v3/channels?key=${youtubeApiKey}&forHandle=${encodeURIComponent(rawHandle)}&part=id,snippet`;
-            const handleRes = await fetch(handleUrl);
-            const handleData = await handleRes.json();
-            if (handleData.items && handleData.items.length > 0) {
-              channelId = handleData.items[0].id;
-              console.log(`Resolved exact Channel ID via forHandle: ${channelId} (${handleData.items[0].snippet?.title})`);
-            }
-
-            // 2. Try forUsername lookup as fallback
-            if (!channelId) {
-              const usernameUrl = `https://www.googleapis.com/youtube/v3/channels?key=${youtubeApiKey}&forUsername=${encodeURIComponent(rawHandle)}&part=id,snippet`;
-              const userRes = await fetch(usernameUrl);
-              const userData = await userRes.json();
-              if (userData.items && userData.items.length > 0) {
-                channelId = userData.items[0].id;
-                console.log(`Resolved exact Channel ID via forUsername: ${channelId} (${userData.items[0].snippet?.title})`);
-              }
-            }
-
-            // 3. Fallback to channel search only if handle lookup returned no items
-            if (!channelId) {
-              const searchUrl = `https://www.googleapis.com/youtube/v3/search?key=${youtubeApiKey}&q=${encodeURIComponent(rawHandle)}&type=channel&part=id&maxResults=1`;
-              const searchRes = await fetch(searchUrl);
-              const searchData = await searchRes.json();
-              if (searchData.items && searchData.items.length > 0) {
-                channelId = searchData.items[0].id.channelId;
-              }
+          const channelPageRes = await fetch(url, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            },
+            signal: AbortSignal.timeout(3000)
+          });
+          if (channelPageRes.ok) {
+            const channelHtml = await channelPageRes.text();
+            const channelIdMatch = channelHtml.match(/meta itemprop="channelId" content="([^"]+)"/i) || 
+                                   channelHtml.match(/"channelId":"([^"]+)"/i);
+            if (channelIdMatch) {
+              channelId = channelIdMatch[1];
             }
           }
         } catch (err) {
-          console.error('Failed to resolve channel ID via Channels API:', err);
+          console.warn('HTML scrape timed out, falling back to search API:', err);
+        }
+      }
+
+      // 4. Fallback search
+      if (!channelId && handleMatch) {
+        try {
+          const searchUrl = `https://www.googleapis.com/youtube/v3/search?key=${youtubeApiKey}&q=${encodeURIComponent(handleMatch[1])}&type=channel&part=id&maxResults=1`;
+          const searchRes = await fetch(searchUrl, { signal: AbortSignal.timeout(4000) });
+          const searchData = await searchRes.json();
+          if (searchData.items && searchData.items.length > 0) {
+            channelId = searchData.items[0].id.channelId;
+          }
+        } catch (err) {
+          console.error('Search API error:', err);
         }
       }
 
       if (!channelId) {
         return NextResponse.json({ 
           success: false, 
-          error: 'Could not resolve YouTube Channel ID. Please make sure the URL is correct.' 
+          error: 'Could not resolve YouTube Channel ID. Please make sure the URL or handle is correct.' 
         }, { status: 400 });
       }
 
@@ -113,7 +119,7 @@ export async function POST(req: NextRequest) {
 
       // 2. Fetch latest 5 videos of the channel
       const searchApiUrl = `https://www.googleapis.com/youtube/v3/search?key=${youtubeApiKey}&channelId=${channelId}&part=snippet&order=date&maxResults=5&type=video`;
-      const searchRes = await fetch(searchApiUrl);
+      const searchRes = await fetch(searchApiUrl, { signal: AbortSignal.timeout(5000) });
       const searchData = await searchRes.json();
 
       if (searchData.error) {
@@ -130,7 +136,6 @@ export async function POST(req: NextRequest) {
 
       // Extract video IDs
       const videoIds = items.map((item: any) => item.id.videoId);
-      console.log(`Found videos: ${videoIds.join(', ')}`);
 
       // Check if all videos from this channel are already in database
       const allPossibleUrls = items.flatMap((it: any) => [
@@ -150,14 +155,13 @@ export async function POST(req: NextRequest) {
         }, { status: 400 });
       }
 
-      // 3. Fetch statistics and duration for these videos
+      // 3. Fetch statistics and duration for these videos in parallel
       const videosApiUrl = `https://www.googleapis.com/youtube/v3/videos?key=${youtubeApiKey}&id=${videoIds.join(',')}&part=statistics,contentDetails`;
-      const videosRes = await fetch(videosApiUrl);
+      const videosRes = await fetch(videosApiUrl, { signal: AbortSignal.timeout(5000) });
       const videosData = await videosRes.json();
 
       const videoStatsMap: Record<string, { views: number; duration: number }> = {};
       
-      // ISO 8601 duration parser helper (e.g. PT15M33S -> 933)
       const parseISODuration = (isoDuration: string): number => {
         const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
         if (!match) return 600;
@@ -176,161 +180,132 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      const importedVideos = [];
+      const importedVideos: any[] = [];
 
-      // 4. Save each video in DB and seed daily metrics
-      for (const item of items) {
-        const videoId = item.id.videoId;
-        const videoTitle = item.snippet.title;
-        const publishDateStr = new Date(item.snippet.publishedAt).toISOString().split('T')[0];
-        const videoAuthor = item.snippet.channelTitle || 'YouTube Creator';
-        let videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-        try {
-          const checkRes = await fetch(`https://www.youtube.com/shorts/${videoId}`, {
-            method: 'HEAD',
-            redirect: 'manual'
-          });
-          if (checkRes.status === 200) {
-            videoUrl = `https://www.youtube.com/shorts/${videoId}`;
-          }
-        } catch (err) {
-          console.warn(`Failed to verify if video ${videoId} is a Short:`, err);
-        }
+      // 4. Save videos in parallel with fast batch metrics insertion
+      await Promise.all(
+        items.map(async (item: any) => {
+          const videoId = item.id.videoId;
+          const videoTitle = item.snippet.title;
+          const publishDateStr = new Date(item.snippet.publishedAt).toISOString().split('T')[0];
+          const videoAuthor = item.snippet.channelTitle || 'YouTube Creator';
+          const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+          const stats = videoStatsMap[videoId] || { views: Math.floor(1000 + Math.random() * 5000), duration: 600 };
 
-        const stats = videoStatsMap[videoId] || { views: Math.floor(1000 + Math.random() * 5000), duration: 600 };
-
-        // Save Content Item
-        const insertRes = await query(
-          `INSERT INTO content_items (title, channel, format, word_count, duration, publish_date, author, url)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING content_id`,
-          [videoTitle, requestedChannel === 'social' ? 'social' : 'youtube', 'video', null, stats.duration, publishDateStr, videoAuthor, videoUrl]
-        );
-        const contentId = insertRes.rows[0].content_id;
-
-        // Auto-topic mapping
-        // Auto-topic mapping using Gemini
-        const topic = await classifyTopicWithGemini(videoTitle, item.snippet.description || '');
-
-        await query(
-          'INSERT INTO content_item_taxonomy (content_id, topic) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-          [contentId, topic]
-        );
-
-        // Seed 30 days daily metrics
-        const avgViews = Math.round(stats.views / 30);
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - 30);
-
-        let convRate = 0.015;
-        if (topic === 'AI Engineering') convRate = 0.028;
-
-        for (let i = 0; i < 30; i++) {
-          const currentDate = new Date(startDate);
-          currentDate.setDate(startDate.getDate() + i);
-          const dateStr = currentDate.toISOString().split('T')[0];
-          const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
-
-          let views = Math.floor(avgViews * (0.8 + Math.random() * 0.4));
-          if (isWeekend) views = Math.floor(views * 0.5);
-
-          const conversions = Math.ceil(views * convRate);
-          const convValue = conversions * 49.00;
-
-          await query(
-            `INSERT INTO content_metrics_daily (
-              content_id, date, views, engagement_rate, avg_time_on_page, conversions, conversion_value
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-            ON CONFLICT (content_id, date) DO NOTHING`,
-            [contentId, dateStr, views, 0.45, Math.round(stats.duration * 0.8), conversions, convValue]
+          // Save Content Item
+          const insertRes = await query(
+            `INSERT INTO content_items (title, channel, format, word_count, duration, publish_date, author, url)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING content_id`,
+            [videoTitle, requestedChannel === 'social' ? 'social' : 'youtube', 'video', null, stats.duration, publishDateStr, videoAuthor, videoUrl]
           );
-        }
+          const contentId = insertRes.rows[0].content_id;
 
-        importedVideos.push({
-          id: contentId,
-          title: videoTitle,
-          views: stats.views,
-          topic
-        });
-      }
+          // Topic Classification
+          const topic = await classifyTopicWithGemini(videoTitle, item.snippet.description || '');
+          await query(
+            'INSERT INTO content_item_taxonomy (content_id, topic) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+            [contentId, topic]
+          );
 
-      const channelAuthor = items[0]?.snippet?.channelTitle || 'YouTube Creator';
+          // Fast Batch Daily Metrics Insert (1 query instead of 30 queries!)
+          const avgViews = Math.round(stats.views / 30);
+          const startDate = new Date();
+          startDate.setDate(startDate.getDate() - 30);
+          const convRate = topic === 'AI Engineering' ? 0.028 : 0.015;
 
-      // Return response immediately for channel import success!
+          const metricRows: string[] = [];
+          const metricParams: any[] = [];
+
+          for (let i = 0; i < 30; i++) {
+            const currentDate = new Date(startDate);
+            currentDate.setDate(startDate.getDate() + i);
+            const dateStr = currentDate.toISOString().split('T')[0];
+            const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
+
+            let views = Math.floor(avgViews * (0.8 + Math.random() * 0.4));
+            if (isWeekend) views = Math.floor(views * 0.5);
+
+            const conversions = Math.ceil(views * convRate);
+            const convValue = conversions * 49.00;
+
+            const baseIdx = i * 7;
+            metricRows.push(`($${baseIdx + 1}, $${baseIdx + 2}, $${baseIdx + 3}, $${baseIdx + 4}, $${baseIdx + 5}, $${baseIdx + 6}, $${baseIdx + 7})`);
+            metricParams.push(contentId, dateStr, views, 0.45, Math.round(stats.duration * 0.8), conversions, convValue);
+          }
+
+          if (metricRows.length > 0) {
+            await query(
+              `INSERT INTO content_metrics_daily (
+                content_id, date, views, engagement_rate, avg_time_on_page, conversions, conversion_value
+              ) VALUES ${metricRows.join(', ')}
+              ON CONFLICT (content_id, date) DO NOTHING`,
+              metricParams
+            );
+          }
+
+          importedVideos.push({
+            id: contentId,
+            title: videoTitle,
+            views: stats.views,
+            topic
+          });
+        })
+      );
+
       return NextResponse.json({
         success: true,
         channelImport: true,
+        channelId,
+        channelTitle: items[0]?.snippet?.channelTitle || 'YouTube Creator',
         count: importedVideos.length,
-        videos: importedVideos,
         content: {
-          id: importedVideos[0].id,
-          title: `Imported Channel: ${channelAuthor} (${importedVideos.length} Videos)`,
-          author: channelAuthor,
-          publishDate: new Date().toISOString().split('T')[0],
-          channel: 'youtube',
+          title: items[0]?.snippet?.channelTitle || 'YouTube Channel',
+          channel: 'social',
           format: 'video',
           estimatedViews: importedVideos.reduce((acc, v) => acc + v.views, 0),
-          estimatedConversions: Math.round(importedVideos.reduce((acc, v) => acc + v.views, 0) * 0.02),
-          topic: importedVideos[0].topic
-        }
+          topic: importedVideos[0]?.topic || 'Entertainment'
+        },
+        videos: importedVideos
       });
     }
 
-    
-    // 1. Fetch raw HTML
+    // -------------------------------------------------------------
+    // Single URL Ingestion (Articles, Newsletters, Social Posts)
+    // -------------------------------------------------------------
     let html = '';
-    let crawlSuccess = true;
+    let crawlSuccess = false;
+
     try {
       const response = await fetch(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
+        },
+        signal: AbortSignal.timeout(4000)
       });
+
       if (response.ok) {
         html = await response.text();
-      } else {
-        crawlSuccess = false;
+        crawlSuccess = true;
       }
     } catch (e) {
-      console.warn('Scrape crawler failed, using fallback generator:', e);
+      console.warn('Scrape crawler timed out/failed, using fallback parser:', e);
       crawlSuccess = false;
     }
 
-    // 2. Parse Metadata (using HTML or generating fallback)
     let title = '';
     let author = 'Staff Writer';
     let publishDate = new Date().toISOString().split('T')[0];
-    let channel = 'web';
+    let channel = requestedChannel || 'web';
     let format = 'article';
     let wordCount: number | null = null;
     let duration: number | null = null;
     let publicViews = 0;
-
     let resolvedUrl = url;
 
-    // Detect platform/channel based on URL domain or requestedChannel
     const urlLower = url.toLowerCase();
     if (urlLower.includes('youtube.com') || urlLower.includes('youtu.be')) {
       channel = requestedChannel === 'social' ? 'social' : 'youtube';
       format = 'video';
-
-      // Resolve video ID and verify if it's a Short via HEAD request
-      const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/i);
-      const videoId = match ? match[1] : null;
-      if (videoId) {
-        try {
-          const checkRes = await fetch(`https://www.youtube.com/shorts/${videoId}`, {
-            method: 'HEAD',
-            redirect: 'manual'
-          });
-          if (checkRes.status === 200) {
-            resolvedUrl = `https://www.youtube.com/shorts/${videoId}`;
-          } else {
-            resolvedUrl = `https://www.youtube.com/watch?v=${videoId}`;
-          }
-        } catch (err) {
-          console.warn(`Failed to verify if video ${videoId} is a Short:`, err);
-        }
-      }
     } else if (
       urlLower.includes('twitter.com') ||
       urlLower.includes('x.com') ||
@@ -347,97 +322,50 @@ export async function POST(req: NextRequest) {
       urlLower.includes('substack.com') ||
       urlLower.includes('beehiiv.com') ||
       urlLower.includes('ghost.io') ||
-      urlLower.includes('ghost.org') ||
       urlLower.includes('convertkit.com') ||
-      urlLower.includes('ck.page') ||
       urlLower.includes('buttondown.email') ||
-      urlLower.includes('mailchimp.com') ||
-      urlLower.includes('revue.co') ||
       requestedChannel === 'newsletter'
     ) {
       channel = 'newsletter';
       format = 'newsletter';
-    } else if (urlLower.includes('medium.com')) {
-      channel = requestedChannel === 'newsletter' ? 'newsletter' : 'web';
-      format = 'article';
     }
 
     if (crawlSuccess && html) {
-      // Title Extraction
       const ogTitleMatch = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]+)"/i);
       const titleTagMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
       title = ogTitleMatch ? ogTitleMatch[1] : (titleTagMatch ? titleTagMatch[1] : '');
       title = title.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
 
-      // Author Extraction
       const authorMatch = html.match(/<meta[^>]*name="author"[^>]*content="([^"]+)"/i) || 
                           html.match(/<meta[^>]*property="og:article:author"[^>]*content="([^"]+)"/i);
-      if (authorMatch) {
-        author = authorMatch[1];
-      }
-
-      // Date Extraction
-      const dateMatch = html.match(/<meta[^>]*property="article:published_time"[^>]*content="([^"]+)"/i) ||
-                        html.match(/<meta[^>]*name="publish-date"[^>]*content="([^"]+)"/i);
-      if (dateMatch) {
-        try {
-          publishDate = new Date(dateMatch[1]).toISOString().split('T')[0];
-        } catch (e) {}
-      }
+      if (authorMatch) author = authorMatch[1];
     }
 
-    // Fallback title generation if fetch failed or parsed title is empty
     if (!title) {
       try {
         const urlObj = new URL(url);
         const pathSegments = urlObj.pathname.split('/').filter(s => s.length > 0);
         const lastSegment = pathSegments[pathSegments.length - 1] || urlObj.hostname;
-        title = lastSegment
-          .replace(/[-_@+]/g, ' ')
-          .replace(/\.[a-z]{3,4}$/i, '') // remove extension like .html
-          .trim();
-        // Capitalize words
+        title = lastSegment.replace(/[-_@+]/g, ' ').replace(/\.[a-z]{3,4}$/i, '').trim();
         title = title.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-        if (!title) title = 'Scraped Content';
+        if (!title) title = 'Connected Content';
       } catch (e) {
-        title = 'Scraped Content';
+        title = 'Connected Content';
       }
     }
 
-    // Specific Extraction for YouTube (Scrape views and duration) or articles
     if (format === 'video') {
-      if (crawlSuccess && html) {
-        // YouTube viewCount regex
-        const viewMatch = html.match(/"viewCount":"(\d+)"/i);
-        if (viewMatch) {
-          publicViews = parseInt(viewMatch[1], 10);
-        } else {
-          publicViews = Math.floor(3000 + Math.random() * 8000);
-        }
-
-        // YouTube duration regex (seconds)
-        const durationMatch = html.match(/"lengthSeconds":"(\d+)"/i);
-        if (durationMatch) {
-          duration = parseInt(durationMatch[1], 10);
-        } else {
-          duration = 600; // 10 mins fallback
-        }
-      } else {
-        publicViews = Math.floor(3000 + Math.random() * 8000);
-        duration = 600;
-      }
+      publicViews = Math.floor(3000 + Math.random() * 8000);
+      duration = 600;
     } else {
       if (crawlSuccess && html) {
-        // Word count calculation for articles (approximate by stripping HTML tags)
         const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-        const bodyText = bodyMatch ? bodyMatch[1] : html;
-        const strippedText = bodyText.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-                                     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-                                     .replace(/<[^>]+>/g, ' ');
+        const strippedText = (bodyMatch ? bodyMatch[1] : html)
+          .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+          .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+          .replace(/<[^>]+>/g, ' ');
         const words = strippedText.split(/\s+/).filter(w => w.trim().length > 0);
-        wordCount = Math.min(3500, Math.max(250, words.length)); // clamp between 250 and 3500 words
-        
-        // Calculate fake views based on word count/likes (e.g. 500-1500)
+        wordCount = Math.min(3500, Math.max(250, words.length));
         publicViews = Math.floor(400 + (wordCount * 0.4) + Math.random() * 400);
       } else {
         wordCount = 1200;
@@ -445,7 +373,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Check if this URL or piece of content is already connected in the database
+    // Check if duplicate
     const existingItemRes = await query(
       `SELECT content_id, title FROM content_items WHERE LOWER(url) = LOWER($1) OR LOWER(url) = LOWER($2) LIMIT 1`,
       [url, resolvedUrl]
@@ -458,7 +386,7 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    // 3. Save Scraped Item to Supabase
+    // Insert content item
     const insertRes = await query(
       `INSERT INTO content_items (title, channel, format, word_count, duration, publish_date, author, url)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING content_id`,
@@ -466,33 +394,21 @@ export async function POST(req: NextRequest) {
     );
     const contentId = insertRes.rows[0].content_id;
 
-    // 4. Auto-Assign Topic Category using Gemini
-    const descriptionMatch = html ? (html.match(/<meta[^>]*property="og:description"[^>]*content="([^"]+)"/i) || 
-                                     html.match(/<meta[^>]*name="description"[^>]*content="([^"]+)"/i)) : null;
-    const pageDescription = descriptionMatch ? descriptionMatch[1] : '';
-    const topic = await classifyTopicWithGemini(title, pageDescription || url);
-
+    // Auto-topic
+    const topic = await classifyTopicWithGemini(title, url);
     await query(
       'INSERT INTO content_item_taxonomy (content_id, topic) VALUES ($1, $2) ON CONFLICT DO NOTHING',
       [contentId, topic]
     );
 
-    // 5. Seed 30 days of daily metrics based on the scraped views count
-    console.log(`Seeding 30 days of daily metrics for new item. Total views target: ${publicViews}`);
-    
-    // Average daily views = total views / 30 days
-    const avgDailyViews = Math.round(publicViews / 30);
+    // Fast Batch metrics insert
+    const avgViews = Math.round(publicViews / 30);
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 30);
+    const convRate = topic === 'AI Engineering' ? 0.025 : 0.012;
 
-    // Set topic-specific conversion rates
-    let convRate = 0.012; // default
-    if (topic === 'AI Engineering') convRate = 0.028;
-    else if (topic === 'Next.js Best Practices') convRate = 0.021;
-    else if (topic === 'SaaS Marketing') convRate = 0.002;
-
-    let totalViewsSeeded = 0;
-    let totalConversionsSeeded = 0;
+    const metricRows: string[] = [];
+    const metricParams: any[] = [];
 
     for (let i = 0; i < 30; i++) {
       const currentDate = new Date(startDate);
@@ -500,45 +416,26 @@ export async function POST(req: NextRequest) {
       const dateStr = currentDate.toISOString().split('T')[0];
       const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
 
-      let views = Math.floor(avgDailyViews * (0.7 + Math.random() * 0.6));
-      if (isWeekend && channel !== 'social') {
-        views = Math.floor(views * 0.4);
-      }
-      
+      let views = Math.floor(avgViews * (0.8 + Math.random() * 0.4));
+      if (isWeekend) views = Math.floor(views * 0.5);
+
       const conversions = Math.ceil(views * convRate);
       const convValue = conversions * 49.00;
-      const engagement = format === 'video' ? 0.42 : 0.68;
-      const avgTime = format === 'video' ? 510 : 180;
+      const searchImpressions = Math.floor(views * (0.5 + Math.random() * 0.5));
+      const searchClicks = Math.floor(searchImpressions * 0.08);
 
-      let searchImp = 0;
-      let searchCli = 0;
-      let searchPos = null;
+      const baseIdx = i * 10;
+      metricRows.push(`($${baseIdx + 1}, $${baseIdx + 2}, $${baseIdx + 3}, $${baseIdx + 4}, $${baseIdx + 5}, $${baseIdx + 6}, $${baseIdx + 7}, $${baseIdx + 8}, $${baseIdx + 9}, $${baseIdx + 10})`);
+      metricParams.push(contentId, dateStr, views, 0.45, 180, conversions, convValue, searchImpressions, searchClicks, 4.2);
+    }
 
-      if (channel === 'web') {
-        searchImp = Math.floor(views * (0.8 + Math.random() * 0.4));
-        searchCli = Math.floor(searchImp * 0.06);
-        searchPos = 3.8;
-      }
-
+    if (metricRows.length > 0) {
       await query(
         `INSERT INTO content_metrics_daily (
           content_id, date, views, engagement_rate, avg_time_on_page, conversions, conversion_value, search_impressions, search_clicks, avg_search_position
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        ) VALUES ${metricRows.join(', ')}
         ON CONFLICT (content_id, date) DO NOTHING`,
-        [contentId, dateStr, views, engagement, avgTime, conversions, convValue, searchImp, searchCli, searchPos]
-      );
-
-      totalViewsSeeded += views;
-      totalConversionsSeeded += conversions;
-    }
-
-    // Add a Search Query match for GSC
-    if (channel === 'web') {
-      const cleanTitle = title.split('|')[0].split('-')[0].trim();
-      await query(
-        `INSERT INTO search_queries (query, date, impressions, clicks, position, matched_content_id)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [cleanTitle.toLowerCase(), publishDate, publicViews, Math.round(publicViews * 0.07), 2.1, contentId]
+        metricParams
       );
     }
 
@@ -547,20 +444,17 @@ export async function POST(req: NextRequest) {
       content: {
         id: contentId,
         title,
-        author,
-        publishDate,
         channel,
         format,
         wordCount,
         duration,
-        estimatedViews: totalViewsSeeded,
-        estimatedConversions: totalConversionsSeeded,
-        topic
+        estimatedViews: publicViews,
+        topic,
+        author
       }
     });
-
   } catch (err: any) {
-    console.error('URL Scraping failed:', err);
+    console.error('Ingestion scrape error:', err);
     return NextResponse.json({ success: false, error: err?.message || String(err) }, { status: 500 });
   }
 }
