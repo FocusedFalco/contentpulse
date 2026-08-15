@@ -1,7 +1,8 @@
 import { runAnalysis } from '@/lib/analysis/analysis';
-import { checkConnection, query } from '@/lib/db/db';
+import { checkConnection } from '@/lib/db/db';
+import { getCurrentUser } from '@/lib/auth/auth';
 import DashboardView from './DashboardView';
-import OnboardingWizard from './OnboardingWizard';
+import LandingPage from './landing/LandingPage';
 import SidebarLayout from './SidebarLayout';
 
 export const dynamic = 'force-dynamic';
@@ -14,25 +15,17 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const resolvedParams = searchParams ? await searchParams : {};
   const activeChannel = resolvedParams.channel || 'all';
 
+  // 1. Check user authentication session
+  const user = await getCurrentUser();
+
+  if (!user) {
+    // Render the high-converting Public Landing Page when unauthenticated
+    return <LandingPage />;
+  }
+
+  // 2. Load and render actual database aggregations for the authenticated user
   const conn = await checkConnection();
 
-  let hasRealData = false;
-  if (conn.connected) {
-    try {
-      const res = await query('SELECT COUNT(*) FROM content_items');
-      hasRealData = parseInt(res.rows[0].count, 10) > 0;
-    } catch (err) {
-      // Tables don't exist yet
-      hasRealData = false;
-    }
-  }
-
-  if (!hasRealData) {
-    // Render the beautiful Landing Page + Interactive Onboarding Setup Wizard
-    return <OnboardingWizard />;
-  }
-
-  // Load and render actual database aggregations for the selected channel
   try {
     const analysisData = await runAnalysis(activeChannel);
     return (
@@ -41,7 +34,13 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       </SidebarLayout>
     );
   } catch (err: any) {
-    // Fallback to onboarding if connection breaks or database is corrupted
-    return <OnboardingWizard initialError={err?.message || String(err)} />;
+    return (
+      <SidebarLayout>
+        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+          <h2>Unable to load dashboard data</h2>
+          <p>{err?.message || String(err)}</p>
+        </div>
+      </SidebarLayout>
+    );
   }
 }

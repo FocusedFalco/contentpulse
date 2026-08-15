@@ -14,6 +14,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
   const isNewsletter = pathname === '/newsletter';
   const isReports = pathname === '/reports';
   const isSettings = pathname === '/settings';
+  const isProfile = pathname === '/profile';
 
   return (
     <div style={{ background: '#000000', minHeight: '100vh', display: 'flex', flexDirection: 'column', color: '#ffffff', fontFamily: 'var(--font-body)' }}>
@@ -140,21 +141,25 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
           </Link>
           
           {/* Avatar Profile image */}
-          <div style={{
-            width: '30px',
-            height: '30px',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '11px',
-            fontWeight: 700,
-            cursor: 'pointer'
-          }}>
-            CP
-          </div>
+          <Link href="/profile" title="Account Profile" style={{ textDecoration: 'none' }}>
+            <div style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)',
+              border: `2px solid ${isProfile ? '#3b82f6' : 'rgba(255,255,255,0.2)'}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '11px',
+              fontWeight: 800,
+              color: '#ffffff',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}>
+              CP
+            </div>
+          </Link>
 
         </div>
       </header>
@@ -320,25 +325,25 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                 Help
               </Link>
 
-              <Link href="/settings" style={{
+              <Link href="/profile" style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
                 fontSize: '13px',
-                color: '#718096',
+                color: isProfile ? '#ffffff' : '#718096',
+                fontWeight: isProfile ? 600 : 400,
                 textDecoration: 'none',
                 transition: 'color 0.2s'
               }}
               onMouseEnter={e => e.currentTarget.style.color = '#fff'}
-              onMouseLeave={e => e.currentTarget.style.color = '#718096'}
+              onMouseLeave={e => { if (!isProfile) e.currentTarget.style.color = '#718096'; }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
                 </svg>
-                Docs
+                Account Profile
               </Link>
-
             </div>
 
           </div>

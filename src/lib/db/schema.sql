@@ -1,5 +1,15 @@
 -- PostgreSQL schema definitions for ContentPulse
 
+-- 0. Users Table
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(120) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    company VARCHAR(150),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 1. Content Items Table
 CREATE TABLE IF NOT EXISTS content_items (
     content_id SERIAL PRIMARY KEY,
