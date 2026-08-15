@@ -1,10 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runAnalysis } from '@/lib/analysis/analysis';
+import { validateSlackWebhookUrl } from '@/lib/security/urlValidator';
+import { checkRateLimit, getClientIp } from '@/lib/security/rateLimiter';
 
 export async function POST(req: NextRequest) {
   try {
+    const clientIp = getClientIp(req);
+    const rateLimit = checkRateLimit(`slack:${clientIp}`, 10, 60000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, error: `Too many requests. Please wait ${rateLimit.retryAfterSec} seconds.` },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json().catch(() => ({}));
     const webhookUrl = body.webhookUrl || process.env.SLACK_WEBHOOK_URL;
+
+    if (!webhookUrl) {
+      return NextResponse.json({ success: false, error: 'Slack Webhook URL is required.' }, { status: 400 });
+    }
+
+    // Validate genuine Slack Webhook domain
+    const validation = validateSlackWebhookUrl(webhookUrl);
+    if (!validation.valid) {
+      return NextResponse.json({ success: false, error: validation.error || 'Invalid Slack Webhook URL.' }, { status: 400 });
+    }
     
     // 1. Fetch latest analysis data to build a dynamic digest
     const analysis = await runAnalysis().catch(() => null);

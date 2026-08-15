@@ -124,6 +124,7 @@ export async function POST(req: NextRequest) {
         name: COOKIE_NAME,
         value: sessionToken,
         httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
         path: '/',
         sameSite: 'lax',
         maxAge: 30 * 24 * 60 * 60 // 30 days
@@ -173,6 +174,7 @@ export async function POST(req: NextRequest) {
         name: COOKIE_NAME,
         value: sessionToken,
         httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
         path: '/',
         sameSite: 'lax',
         maxAge: 30 * 24 * 60 * 60

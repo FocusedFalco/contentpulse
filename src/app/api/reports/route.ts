@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { runAnalysis } from '@/lib/analysis/analysis';
 import { generateEditorialReport } from '@/lib/gemini/gemini';
 import { query } from '@/lib/db/db';
+import { checkRateLimit, getClientIp } from '@/lib/security/rateLimiter';
 
 export async function GET(req: NextRequest) {
   try {
@@ -47,6 +48,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const clientIp = getClientIp(req);
+    const rateLimit = checkRateLimit(`reports:${clientIp}`, 10, 60000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, error: `Report generation rate limit reached. Please wait ${rateLimit.retryAfterSec} seconds.` },
+        { status: 429 }
+      );
+    }
+
     let body = {};
     try {
       body = await req.json();

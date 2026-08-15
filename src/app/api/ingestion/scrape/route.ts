@@ -1,9 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, initializeDatabase } from '@/lib/db/db';
 import { classifyTopicWithGemini } from '@/lib/gemini/gemini';
+import { validatePublicUrl } from '@/lib/security/urlValidator';
+import { checkRateLimit, getClientIp } from '@/lib/security/rateLimiter';
 
 export async function POST(req: NextRequest) {
   try {
+    // 1. Rate Limiting: Max 20 scrape ingestion requests per minute per IP
+    const clientIp = getClientIp(req);
+    const rateLimit = checkRateLimit(`scrape:${clientIp}`, 20, 60000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, error: `Rate limit exceeded. Please wait ${rateLimit.retryAfterSec} seconds before ingesting more content.` },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfterSec) } }
+      );
+    }
+
     let { url, channel: requestedChannel } = await req.json();
 
     if (!url || typeof url !== 'string' || url.trim().length === 0) {
@@ -19,6 +31,12 @@ export async function POST(req: NextRequest) {
       }
     } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
       url = `https://${url}`;
+    }
+
+    // 2. SSRF Protection: Block private hostnames, loopbacks, and cloud metadata IPs
+    const urlValidation = validatePublicUrl(url);
+    if (!urlValidation.valid) {
+      return NextResponse.json({ success: false, error: urlValidation.error || 'Invalid or forbidden URL.' }, { status: 400 });
     }
 
     // Auto-create tables on first scrape if they don't exist
