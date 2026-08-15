@@ -109,6 +109,24 @@ export async function POST(req: NextRequest) {
       const videoIds = items.map((item: any) => item.id.videoId);
       console.log(`Found videos: ${videoIds.join(', ')}`);
 
+      // Check if all videos from this channel are already in database
+      const allPossibleUrls = items.flatMap((it: any) => [
+        `https://www.youtube.com/watch?v=${it.id.videoId}`,
+        `https://www.youtube.com/shorts/${it.id.videoId}`
+      ]);
+
+      const existingVideosRes = await query(
+        `SELECT url FROM content_items WHERE url = ANY($1)`,
+        [allPossibleUrls]
+      );
+
+      if (existingVideosRes.rows.length >= items.length && items.length > 0) {
+        return NextResponse.json({
+          success: false,
+          error: 'Channel already in sync. This channel and its latest content are already connected to your dashboard.'
+        }, { status: 400 });
+      }
+
       // 3. Fetch statistics and duration for these videos
       const videosApiUrl = `https://www.googleapis.com/youtube/v3/videos?key=${youtubeApiKey}&id=${videoIds.join(',')}&part=statistics,contentDetails`;
       const videosRes = await fetch(videosApiUrl);
@@ -402,6 +420,19 @@ export async function POST(req: NextRequest) {
         wordCount = 1200;
         publicViews = Math.floor(800 + Math.random() * 400);
       }
+    }
+
+    // Check if this URL or piece of content is already connected in the database
+    const existingItemRes = await query(
+      `SELECT content_id, title FROM content_items WHERE LOWER(url) = LOWER($1) OR LOWER(url) = LOWER($2) LIMIT 1`,
+      [url, resolvedUrl]
+    );
+
+    if (existingItemRes.rows.length > 0) {
+      return NextResponse.json({
+        success: false,
+        error: `Channel already in sync. "${existingItemRes.rows[0].title}" is already connected to your dashboard.`
+      }, { status: 400 });
     }
 
     // 3. Save Scraped Item to Supabase
