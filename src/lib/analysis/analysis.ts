@@ -53,6 +53,41 @@ export interface Recommendation {
   metrics?: any;
 }
 
+export interface ContentItemSummary {
+  content_id: number;
+  title: string;
+  channel: string;
+  format: string;
+  word_count: number | null;
+  duration: number | null;
+  publish_date: string;
+  author: string;
+  url: string;
+  topic?: string;
+  views: number;
+  conversions: number;
+  engagement_rate: number;
+}
+
+export interface ChannelInfo {
+  channel: string;
+  label: string;
+  count: number;
+  views: number;
+}
+
+export interface ChannelSummary {
+  channel: string;
+  totalViews: number;
+  totalConversions: number;
+  conversionRate: number;
+  piecesCount: number;
+  avgEngagement: number;
+  avgTime: number;
+  searchImpressions: number;
+  searchClicks: number;
+}
+
 export interface StructuredAnalysisResult {
   topics: TopicMetrics[];
   formats: FormatMetrics[];
@@ -61,16 +96,53 @@ export interface StructuredAnalysisResult {
   contentGaps: ContentGap[];
   recommendations: Recommendation[];
   timeframe: string;
+  channel: string;
+  availableChannels: ChannelInfo[];
+  channelSummary: ChannelSummary;
+  topItems: ContentItemSummary[];
 }
 
 /**
- * Executes the analytical queries and builds the structured metrics tables
+ * Executes analytical queries and builds structured metrics, optionally filtered by channel
  */
-export async function runAnalysis(): Promise<StructuredAnalysisResult> {
-  // We'll calculate dates for recency weighting
-  // Last 30 days gets a weight of 1.5, older days in the 90-day window get 1.0
-  
-  // 1. Topic Aggregation with Sample-Size Guardrails & Recency Weighting
+export async function runAnalysis(channelFilter: string = 'all'): Promise<StructuredAnalysisResult> {
+  const selectedChannel = channelFilter.toLowerCase().trim();
+  const isAll = selectedChannel === 'all' || !selectedChannel;
+
+  // 1. Fetch available channels in the database
+  const channelsRes = await query(`
+    SELECT 
+      LOWER(i.channel) as channel,
+      COUNT(DISTINCT i.content_id)::int as count,
+      COALESCE(SUM(m.views), 0)::int as views
+    FROM content_items i
+    LEFT JOIN content_metrics_daily m ON i.content_id = m.content_id
+    GROUP BY LOWER(i.channel)
+    ORDER BY views DESC
+  `);
+
+  const channelLabelMap: Record<string, string> = {
+    web: 'Web Pages',
+    social: 'Social Media',
+    newsletter: 'Newsletter',
+    youtube: 'YouTube Video'
+  };
+
+  const availableChannels: ChannelInfo[] = channelsRes.rows.map(r => ({
+    channel: r.channel,
+    label: channelLabelMap[r.channel] || r.channel.toUpperCase(),
+    count: parseInt(r.count, 10),
+    views: parseInt(r.views, 10)
+  }));
+
+  // Add 'all' channel to available list
+  const totalAllViews = availableChannels.reduce((acc, c) => acc + c.views, 0);
+  const totalAllPieces = availableChannels.reduce((acc, c) => acc + c.count, 0);
+
+  // 2. Topic Aggregation with Sample-Size Guardrails & Recency Weighting
+  const topicFilterClause = isAll ? '' : 'WHERE LOWER(i.channel) = $1';
+  const topicParams = isAll ? [] : [selectedChannel];
+
   const topicSql = `
     WITH raw_daily AS (
       SELECT 
@@ -87,6 +159,7 @@ export async function runAnalysis(): Promise<StructuredAnalysisResult> {
       FROM content_item_taxonomy t
       JOIN content_items i ON t.content_id = i.content_id
       JOIN content_metrics_daily m ON i.content_id = m.content_id
+      ${topicFilterClause}
     ),
     topic_aggregates AS (
       SELECT 
@@ -101,9 +174,11 @@ export async function runAnalysis(): Promise<StructuredAnalysisResult> {
       GROUP BY topic
     ),
     pieces_count AS (
-      SELECT topic, COUNT(DISTINCT content_id) as pieces_count
-      FROM content_item_taxonomy
-      GROUP BY topic
+      SELECT t.topic, COUNT(DISTINCT t.content_id) as pieces_count
+      FROM content_item_taxonomy t
+      JOIN content_items i ON t.content_id = i.content_id
+      ${topicFilterClause}
+      GROUP BY t.topic
     )
     SELECT 
       a.topic,
@@ -118,13 +193,12 @@ export async function runAnalysis(): Promise<StructuredAnalysisResult> {
     JOIN pieces_count p ON a.topic = p.topic
     ORDER BY weighted_score DESC
   `;
-  const topicRes = await query(topicSql);
+  const topicRes = await query(topicSql, topicParams);
   
   const topics: TopicMetrics[] = topicRes.rows.map(row => {
     const piecesCount = parseInt(row.pieces_count, 10);
     const totalViews = parseInt(row.total_views, 10);
-    // GUARDRAIL: Topic requires >= 5 published pieces OR >= 1,000 views to be considered statistically eligible
-    const isEligible = piecesCount >= 4 || totalViews >= 1000;
+    const isEligible = piecesCount >= 3 || totalViews >= 500;
 
     return {
       topic: row.topic,
@@ -132,15 +206,17 @@ export async function runAnalysis(): Promise<StructuredAnalysisResult> {
       totalViews,
       totalConversions: parseInt(row.total_conversions, 10),
       conversionRate: parseFloat(row.conversion_rate),
-      avgEngagement: parseFloat(row.avg_engagement),
-      avgTime: Math.round(parseFloat(row.avg_time)),
-      weightedScore: parseFloat(row.weighted_score),
+      avgEngagement: parseFloat(row.avg_engagement || '0'),
+      avgTime: Math.round(parseFloat(row.avg_time || '0')),
+      weightedScore: parseFloat(row.weighted_score || '0'),
       isEligible
     };
   });
 
-  // 2. Format Percentile Normalization
-  // Rank views and conversions within each format group, then find average percentile
+  // 3. Format Percentile Normalization
+  const formatFilterClause = isAll ? '' : 'WHERE LOWER(i.channel) = $1';
+  const formatParams = isAll ? [] : [selectedChannel];
+
   const formatSql = `
     WITH content_totals AS (
       SELECT 
@@ -150,6 +226,7 @@ export async function runAnalysis(): Promise<StructuredAnalysisResult> {
         SUM(m.conversions) as conversions
       FROM content_items i
       JOIN content_metrics_daily m ON i.content_id = m.content_id
+      ${formatFilterClause}
       GROUP BY i.content_id, i.format
     ),
     percentiles AS (
@@ -168,22 +245,25 @@ export async function runAnalysis(): Promise<StructuredAnalysisResult> {
       SUM(views) as total_views,
       SUM(conversions) as total_conversions,
       AVG((views_percentile + conversions_percentile) / 2.0) * 100 as avg_percentile,
-      SUM(CASE WHEN (views_percentile >= 0.75 OR conversions_percentile >= 0.75) THEN 1 ELSE 0 END)::numeric / COUNT(content_id)::numeric * 100 as top_quartile_pct
+      SUM(CASE WHEN (views_percentile >= 0.75 OR conversions_percentile >= 0.75) THEN 1 ELSE 0 END)::numeric / GREATEST(COUNT(content_id), 1)::numeric * 100 as top_quartile_pct
     FROM percentiles
     GROUP BY format
     ORDER BY avg_percentile DESC
   `;
-  const formatRes = await query(formatSql);
+  const formatRes = await query(formatSql, formatParams);
   const formats: FormatMetrics[] = formatRes.rows.map(row => ({
     format: row.format,
     piecesCount: parseInt(row.pieces_count, 10),
     totalViews: parseInt(row.total_views, 10),
     totalConversions: parseInt(row.total_conversions, 10),
-    avgPercentile: parseFloat(row.avg_percentile),
-    topQuartilePercentage: parseFloat(row.top_quartile_pct)
+    avgPercentile: parseFloat(row.avg_percentile || '50'),
+    topQuartilePercentage: parseFloat(row.top_quartile_pct || '0')
   }));
 
-  // 3. Article Word Count Buckets (Diminishing Returns Analysis)
+  // 4. Article Word Count Buckets (Diminishing Returns Analysis)
+  const lengthFilter = isAll ? "WHERE i.format = 'article' AND i.word_count IS NOT NULL" : "WHERE i.format = 'article' AND i.word_count IS NOT NULL AND LOWER(i.channel) = $1";
+  const lengthParams = isAll ? [] : [selectedChannel];
+
   const lengthSql = `
     WITH article_totals AS (
       SELECT 
@@ -194,7 +274,7 @@ export async function runAnalysis(): Promise<StructuredAnalysisResult> {
         AVG(m.avg_time_on_page) as avg_time
       FROM content_items i
       JOIN content_metrics_daily m ON i.content_id = m.content_id
-      WHERE i.format = 'article' AND i.word_count IS NOT NULL
+      ${lengthFilter}
       GROUP BY i.content_id, i.word_count
     ),
     bucketed AS (
@@ -226,16 +306,19 @@ export async function runAnalysis(): Promise<StructuredAnalysisResult> {
         ELSE 4
       END
   `;
-  const lengthRes = await query(lengthSql);
+  const lengthRes = await query(lengthSql, lengthParams);
   const lengthBuckets: LengthMetrics[] = lengthRes.rows.map(row => ({
     bucket: row.bucket,
     piecesCount: parseInt(row.pieces_count, 10),
-    avgViews: Math.round(parseFloat(row.avg_views)),
-    avgTimeOnPage: Math.round(parseFloat(row.avg_time_on_page)),
-    conversionRate: parseFloat(row.conversion_rate)
+    avgViews: Math.round(parseFloat(row.avg_views || '0')),
+    avgTimeOnPage: Math.round(parseFloat(row.avg_time_on_page || '0')),
+    conversionRate: parseFloat(row.conversion_rate || '0')
   }));
 
-  // 3.5 Video Duration Buckets (Short-form <3m vs Long-form >=3m)
+  // 5. Video Duration Buckets (Short-form <3m vs Long-form >=3m)
+  const videoFilter = isAll ? "WHERE i.format = 'video' AND i.duration IS NOT NULL AND i.duration > 0" : "WHERE i.format = 'video' AND i.duration IS NOT NULL AND i.duration > 0 AND LOWER(i.channel) = $1";
+  const videoParams = isAll ? [] : [selectedChannel];
+
   const videoLengthSql = `
     WITH video_totals AS (
       SELECT 
@@ -246,7 +329,7 @@ export async function runAnalysis(): Promise<StructuredAnalysisResult> {
         AVG(m.avg_time_on_page) as avg_time
       FROM content_items i
       JOIN content_metrics_daily m ON i.content_id = m.content_id
-      WHERE i.format = 'video' AND i.duration IS NOT NULL AND i.duration > 0
+      ${videoFilter}
       GROUP BY i.content_id, i.duration
     ),
     bucketed AS (
@@ -274,16 +357,16 @@ export async function runAnalysis(): Promise<StructuredAnalysisResult> {
         ELSE 2
       END
   `;
-  const videoLengthRes = await query(videoLengthSql);
+  const videoLengthRes = await query(videoLengthSql, videoParams);
   const videoLengthBuckets: VideoLengthMetrics[] = videoLengthRes.rows.map(row => ({
     bucket: row.bucket,
     piecesCount: parseInt(row.pieces_count, 10),
-    avgViews: Math.round(parseFloat(row.avg_views)),
-    avgTimeOnPage: Math.round(parseFloat(row.avg_time_on_page)),
-    conversionRate: parseFloat(row.conversion_rate)
+    avgViews: Math.round(parseFloat(row.avg_views || '0')),
+    avgTimeOnPage: Math.round(parseFloat(row.avg_time_on_page || '0')),
+    conversionRate: parseFloat(row.conversion_rate || '0')
   }));
 
-  // 4. Content Gaps (Search Console queries with high impressions but no matching content)
+  // 6. Content Gaps (Search Console queries)
   const gapsSql = `
     SELECT 
       query,
@@ -294,7 +377,7 @@ export async function runAnalysis(): Promise<StructuredAnalysisResult> {
     FROM search_queries
     WHERE matched_content_id IS NULL
     GROUP BY query
-    HAVING SUM(impressions) > 100
+    HAVING SUM(impressions) > 50
     ORDER BY impressions DESC
     LIMIT 5
   `;
@@ -303,7 +386,6 @@ export async function runAnalysis(): Promise<StructuredAnalysisResult> {
     const impressions = parseInt(row.impressions, 10);
     const clicks = parseInt(row.clicks, 10);
     const ctr = parseFloat(row.ctr);
-    // Priority score = Impressions * (1.0 - CTR) -> Higher impressions + lower CTR = bigger gap opportunity
     const priorityScore = Math.round(impressions * (1.0 - (ctr / 100)));
 
     return {
@@ -316,60 +398,137 @@ export async function runAnalysis(): Promise<StructuredAnalysisResult> {
     };
   });
 
-  // 5. Generate Continue / Stop / Create Recommendations
+  // 7. Top Content Items for Selected Channel
+  const topItemsFilter = isAll ? '' : 'WHERE LOWER(c.channel) = $1';
+  const topItemsParams = isAll ? [] : [selectedChannel];
+
+  const topItemsRes = await query(`
+    SELECT 
+      c.content_id, 
+      c.title, 
+      c.channel, 
+      c.format, 
+      c.word_count, 
+      c.duration, 
+      c.publish_date, 
+      c.author, 
+      c.url,
+      t.topic,
+      COALESCE(SUM(m.views), 0)::int AS views,
+      COALESCE(SUM(m.conversions), 0)::int AS conversions,
+      COALESCE(AVG(m.engagement_rate), 0)::float AS engagement_rate
+    FROM content_items c
+    LEFT JOIN content_item_taxonomy t ON c.content_id = t.content_id
+    LEFT JOIN content_metrics_daily m ON c.content_id = m.content_id
+    ${topItemsFilter}
+    GROUP BY c.content_id, c.title, c.channel, c.format, c.word_count, c.duration, c.publish_date, c.author, c.url, t.topic
+    ORDER BY views DESC
+    LIMIT 12
+  `, topItemsParams);
+
+  const topItems: ContentItemSummary[] = topItemsRes.rows.map(r => ({
+    content_id: r.content_id,
+    title: r.title,
+    channel: r.channel,
+    format: r.format,
+    word_count: r.word_count,
+    duration: r.duration,
+    publish_date: r.publish_date ? new Date(r.publish_date).toISOString().split('T')[0] : '',
+    author: r.author,
+    url: r.url,
+    topic: r.topic,
+    views: parseInt(r.views, 10),
+    conversions: parseInt(r.conversions, 10),
+    engagement_rate: parseFloat(r.engagement_rate)
+  }));
+
+  // 8. Channel Summary Metrics Aggregation
+  const summaryFilter = isAll ? '' : 'WHERE LOWER(i.channel) = $1';
+  const summaryParams = isAll ? [] : [selectedChannel];
+
+  const summaryRes = await query(`
+    SELECT 
+      COALESCE(SUM(m.views), 0)::int as total_views,
+      COALESCE(SUM(m.conversions), 0)::int as total_conversions,
+      COALESCE(AVG(m.engagement_rate), 0)::float as avg_engagement,
+      COALESCE(AVG(m.avg_time_on_page), 0)::float as avg_time,
+      COALESCE(SUM(m.search_impressions), 0)::int as search_impressions,
+      COALESCE(SUM(m.search_clicks), 0)::int as search_clicks,
+      COUNT(DISTINCT i.content_id)::int as pieces_count
+    FROM content_items i
+    LEFT JOIN content_metrics_daily m ON i.content_id = m.content_id
+    ${summaryFilter}
+  `, summaryParams);
+
+  const summaryRow = summaryRes.rows[0] || {};
+  const totalViews = parseInt(summaryRow.total_views || '0', 10);
+  const totalConversions = parseInt(summaryRow.total_conversions || '0', 10);
+  const piecesCount = parseInt(summaryRow.pieces_count || '0', 10);
+  const conversionRate = totalViews > 0 ? (totalConversions / totalViews) * 100 : 0;
+
+  const channelSummary: ChannelSummary = {
+    channel: selectedChannel,
+    totalViews,
+    totalConversions,
+    conversionRate,
+    piecesCount,
+    avgEngagement: parseFloat(summaryRow.avg_engagement || '0'),
+    avgTime: Math.round(parseFloat(summaryRow.avg_time || '0')),
+    searchImpressions: parseInt(summaryRow.search_impressions || '0', 10),
+    searchClicks: parseInt(summaryRow.search_clicks || '0', 10)
+  };
+
+  // 9. Generate Continue / Stop / Create Recommendations
   const recommendations: Recommendation[] = [];
 
-  // A. Continue recommendations (Topics/formats that are high performers with sample size)
-  const topTopics = topics.filter(t => t.isEligible && t.conversionRate > 1.5).slice(0, 2);
+  const topTopics = topics.filter(t => t.isEligible && t.conversionRate > 1.2).slice(0, 2);
   for (const topic of topTopics) {
     recommendations.push({
       action: 'CONTINUE',
       target: `Topic: ${topic.topic}`,
-      reason: `High conversion rate of ${topic.conversionRate.toFixed(2)}% with a robust sample size of ${topic.piecesCount} published pieces. Generating ${topic.totalConversions} conversions overall.`,
+      reason: `High conversion rate of ${topic.conversionRate.toFixed(2)}% with ${topic.piecesCount} pieces published. Generated ${topic.totalConversions} conversions in ${selectedChannel.toUpperCase()}.`,
       metrics: { conversionRate: topic.conversionRate, totalConversions: topic.totalConversions, views: topic.totalViews }
     });
   }
 
-  // B. Stop recommendations (Low performers)
   const poorTopics = topics.filter(t => t.totalViews > 100 && t.conversionRate < 0.5);
   for (const topic of poorTopics) {
     recommendations.push({
       action: 'STOP',
       target: `Topic: ${topic.topic}`,
-      reason: `Underperforming topic with a very low conversion rate of ${topic.conversionRate.toFixed(2)}% over ${topic.totalViews} views. Resources should be reallocated to higher value categories.`,
+      reason: `Underperforming topic with a conversion rate of ${topic.conversionRate.toFixed(2)}% over ${topic.totalViews} views. Resources should be shifted to top quartile themes.`,
       metrics: { conversionRate: topic.conversionRate, totalConversions: topic.totalConversions, views: topic.totalViews }
     });
   }
 
-  // If no topic fell below, find the weakest format if it is actually underperforming (percentile < 45%) and we have multiple formats to compare
   if (poorTopics.length === 0 && formats.length > 1) {
     const worstFormat = formats[formats.length - 1];
     if (worstFormat.avgPercentile < 45.0) {
       recommendations.push({
         action: 'STOP',
         target: `Format: ${worstFormat.format}`,
-        reason: `Format has the lowest relative performance in your content mix (avg percentile of ${worstFormat.avgPercentile.toFixed(1)}%). Consider scaling back production.`,
+        reason: `Lowest relative performance in ${selectedChannel.toUpperCase()} (avg percentile of ${worstFormat.avgPercentile.toFixed(1)}%). Consider reallocating effort.`,
         metrics: { avgPercentile: worstFormat.avgPercentile }
       });
     }
   }
 
-  // C. Create recommendations (from Search Gaps & top-performer expansions)
-  for (const gap of contentGaps.slice(0, 2)) {
-    recommendations.push({
-      action: 'CREATE',
-      target: `Target Query: "${gap.query}"`,
-      reason: `High-priority organic growth gap. Currently receiving ${gap.impressions} search impressions but only ${gap.clicks} clicks due to lack of targeted matching content (Est. Position: ${gap.avgPosition.toFixed(1)}).`,
-      metrics: { impressions: gap.impressions, clicks: gap.clicks, priorityScore: gap.priorityScore }
-    });
+  if (contentGaps.length > 0 && (isAll || selectedChannel === 'web')) {
+    for (const gap of contentGaps.slice(0, 2)) {
+      recommendations.push({
+        action: 'CREATE',
+        target: `Search Gap: "${gap.query}"`,
+        reason: `High-priority organic growth opportunity. Received ${gap.impressions} search impressions with low matching content coverage.`,
+        metrics: { impressions: gap.impressions, clicks: gap.clicks, priorityScore: gap.priorityScore }
+      });
+    }
   }
 
-  // Add a topic expansion create recommendation based on top continue
   if (topTopics.length > 0) {
     recommendations.push({
       action: 'CREATE',
-      target: `Expansion: ${topTopics[0].topic} Adjacent content`,
-      reason: `Expand on the highly successful "${topTopics[0].topic}" cluster. Focus on adjacent topics or repurpose existing articles into videos, which is a top-quartile producing format.`,
+      target: `Expand Cluster: ${topTopics[0].topic}`,
+      reason: `Double down on the top performing "${topTopics[0].topic}" cluster for ${selectedChannel.toUpperCase()} with new formats or follow-up insights.`,
       metrics: null
     });
   }
@@ -381,6 +540,10 @@ export async function runAnalysis(): Promise<StructuredAnalysisResult> {
     videoLengthBuckets,
     contentGaps,
     recommendations,
-    timeframe: 'Last 90 Days'
+    timeframe: 'Last 90 Days',
+    channel: selectedChannel,
+    availableChannels,
+    channelSummary,
+    topItems
   };
 }

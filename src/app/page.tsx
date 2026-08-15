@@ -6,7 +6,14 @@ import SidebarLayout from './SidebarLayout';
 
 export const dynamic = 'force-dynamic';
 
-export default async function DashboardPage() {
+interface PageProps {
+  searchParams?: Promise<{ channel?: string }> | { channel?: string };
+}
+
+export default async function DashboardPage({ searchParams }: PageProps) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const activeChannel = resolvedParams.channel || 'all';
+
   const conn = await checkConnection();
 
   let hasRealData = false;
@@ -25,12 +32,12 @@ export default async function DashboardPage() {
     return <OnboardingWizard />;
   }
 
-  // Load and render actual database aggregations
+  // Load and render actual database aggregations for the selected channel
   try {
-    const analysisData = await runAnalysis();
+    const analysisData = await runAnalysis(activeChannel);
     return (
       <SidebarLayout>
-        <DashboardView data={analysisData} />
+        <DashboardView initialData={analysisData} initialChannel={activeChannel} />
       </SidebarLayout>
     );
   } catch (err: any) {
