@@ -4,10 +4,17 @@ import { classifyTopicWithGemini } from '@/lib/gemini/gemini';
 
 export async function POST(req: NextRequest) {
   try {
-    const { url } = await req.json();
+    let { url, channel: requestedChannel } = await req.json();
 
-    if (!url || !url.startsWith('http')) {
-      return NextResponse.json({ success: false, error: 'Valid URL is required.' }, { status: 400 });
+    if (!url || typeof url !== 'string' || url.trim().length === 0) {
+      return NextResponse.json({ success: false, error: 'Valid URL or handle is required.' }, { status: 400 });
+    }
+
+    url = url.trim();
+    if (url.startsWith('@')) {
+      url = `https://x.com/${url.replace(/^@+/, '')}`;
+    } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = `https://${url}`;
     }
 
     // Auto-create tables on first scrape if they don't exist
@@ -259,10 +266,10 @@ export async function POST(req: NextRequest) {
 
     let resolvedUrl = url;
 
-    // Detect platform/channel based on URL domain
+    // Detect platform/channel based on URL domain or requestedChannel
     const urlLower = url.toLowerCase();
     if (urlLower.includes('youtube.com') || urlLower.includes('youtu.be')) {
-      channel = 'youtube';
+      channel = requestedChannel === 'social' ? 'social' : 'youtube';
       format = 'video';
 
       // Resolve video ID and verify if it's a Short via HEAD request
@@ -283,11 +290,34 @@ export async function POST(req: NextRequest) {
           console.warn(`Failed to verify if video ${videoId} is a Short:`, err);
         }
       }
-    } else if (urlLower.includes('substack.com')) {
+    } else if (
+      urlLower.includes('twitter.com') ||
+      urlLower.includes('x.com') ||
+      urlLower.includes('linkedin.com') ||
+      urlLower.includes('instagram.com') ||
+      urlLower.includes('threads.net') ||
+      urlLower.includes('bsky.app') ||
+      urlLower.includes('tiktok.com') ||
+      requestedChannel === 'social'
+    ) {
+      channel = 'social';
+      format = 'social_post';
+    } else if (
+      urlLower.includes('substack.com') ||
+      urlLower.includes('beehiiv.com') ||
+      urlLower.includes('ghost.io') ||
+      urlLower.includes('ghost.org') ||
+      urlLower.includes('convertkit.com') ||
+      urlLower.includes('ck.page') ||
+      urlLower.includes('buttondown.email') ||
+      urlLower.includes('mailchimp.com') ||
+      urlLower.includes('revue.co') ||
+      requestedChannel === 'newsletter'
+    ) {
       channel = 'newsletter';
       format = 'newsletter';
     } else if (urlLower.includes('medium.com')) {
-      channel = 'web';
+      channel = requestedChannel === 'newsletter' ? 'newsletter' : 'web';
       format = 'article';
     }
 
