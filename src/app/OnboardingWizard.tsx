@@ -314,26 +314,6 @@ export default function OnboardingWizard({ initialError }: OnboardingWizardProps
           </div>
         </div>
 
-        {/* AI-Powered Insights Badge */}
-        <div style={{ display: 'inline-flex', justifyContent: 'center', marginBottom: '32px' }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: 'rgba(255, 255, 255, 0.02)',
-            border: '1px solid rgba(59, 130, 246, 0.35)',
-            borderRadius: '30px',
-            padding: '6px 16px',
-            fontSize: '12px',
-            fontWeight: 600,
-            color: '#60a5fa',
-            letterSpacing: '0.05em',
-            boxShadow: '0 0 15px rgba(59, 130, 246, 0.15)'
-          }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#3b82f6', display: 'inline-block', boxShadow: '0 0 8px #3b82f6' }}></span>
-            AI-Powered Insights
-          </div>
-        </div>
 
         {/* Hero Title */}
         <h1 style={{
