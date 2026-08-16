@@ -173,9 +173,6 @@ function AuthPageContent() {
           <span style={{ fontSize: '20px', fontWeight: 800, letterSpacing: '-0.5px' }}>
             ContentPulse
           </span>
-          <span style={{ fontSize: '10px', background: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.3)', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>
-            AI ENGINE
-          </span>
         </Link>
 
         <Link href="/" style={{ fontSize: '13px', color: '#a0aec0', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
