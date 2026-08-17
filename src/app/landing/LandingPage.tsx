@@ -5,26 +5,46 @@ import Link from 'next/link';
 
 export default function LandingPage() {
   useEffect(() => {
-    // Intersection Observer with bidirectional scroll trigger (slides in on scroll down, slides out on scroll up)
-    const observerCallback: IntersectionObserverCallback = (entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-visible');
+    const revealElements = Array.from(document.querySelectorAll('.scroll-reveal')) as HTMLElement[];
+
+    let ticking = false;
+
+    const checkVisibility = () => {
+      const windowHeight = window.innerHeight;
+      
+      revealElements.forEach(el => {
+        const rect = el.getBoundingClientRect();
+        
+        // Element is visible when its top has entered into the bottom 88% of screen
+        // and its bottom has not scrolled past the top 8% of screen
+        const isElementVisible = rect.top < windowHeight * 0.88 && rect.bottom > windowHeight * 0.08;
+
+        if (isElementVisible) {
+          el.classList.add('is-visible');
         } else {
-          entry.target.classList.remove('is-visible');
+          el.classList.remove('is-visible');
         }
       });
+      ticking = false;
     };
 
-    const observer = new IntersectionObserver(observerCallback, {
-      threshold: 0.12,
-      rootMargin: '0px 0px -30px 0px'
-    });
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(checkVisibility);
+        ticking = true;
+      }
+    };
 
-    const revealElements = document.querySelectorAll('.scroll-reveal');
-    revealElements.forEach(el => observer.observe(el));
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll, { passive: true });
+    
+    // Initial run to render viewport elements
+    checkVisibility();
 
-    return () => observer.disconnect();
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
   }, []);
 
   return (
