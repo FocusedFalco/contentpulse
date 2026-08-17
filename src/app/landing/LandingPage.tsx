@@ -5,18 +5,20 @@ import Link from 'next/link';
 
 export default function LandingPage() {
   useEffect(() => {
-    // Intersection Observer to trigger slide-in animations as user scrolls
-    const observerCallback: IntersectionObserverCallback = (entries, observer) => {
+    // Intersection Observer with bidirectional scroll trigger (slides in on scroll down, slides out on scroll up)
+    const observerCallback: IntersectionObserverCallback = (entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add('is-visible');
+        } else {
+          entry.target.classList.remove('is-visible');
         }
       });
     };
 
     const observer = new IntersectionObserver(observerCallback, {
       threshold: 0.12,
-      rootMargin: '0px 0px -50px 0px'
+      rootMargin: '0px 0px -30px 0px'
     });
 
     const revealElements = document.querySelectorAll('.scroll-reveal');
