@@ -27,65 +27,46 @@ function ScrollSlide({ direction = 'up', children, style = {}, className = '' }:
       const rect = ref.current.getBoundingClientRect();
       const windowHeight = window.innerHeight;
 
-      // Position relative to viewport:
-      // When rect.top is at windowHeight, progress is 0 (entering from bottom)
-      // When rect.top is at 0 (top of viewport), progress is roughly 0.6
-      // When rect.bottom is at 0, progress is 1 (exited through top)
-      const totalDistance = windowHeight + rect.height;
-      const currentScroll = windowHeight - rect.top;
-      const progress = Math.max(0, Math.min(1, currentScroll / totalDistance));
+      // Center-anchored distance calculation
+      const elementCenter = rect.top + rect.height / 2;
+      const screenCenter = windowHeight / 2;
+      const distFromCenter = elementCenter - screenCenter;
 
-      let opacity = 1;
+      // Plateau: inside middle 25% of viewport, the slide is 100% docked and centered
+      const plateau = windowHeight * 0.14;
+      
+      let factor = 0;
+      if (Math.abs(distFromCenter) > plateau) {
+        const excess = Math.abs(distFromCenter) - plateau;
+        const maxTravel = windowHeight * 0.42;
+        factor = Math.min(1, excess / maxTravel);
+      }
+
+      const isBelow = distFromCenter > 0;
+      const opacity = Math.max(0.08, 1 - factor * 0.92);
+
       let transform = 'translate(0, 0) scale(1)';
-
-      // 1. Entrance zone (from bottom 0% to 35% of progress)
-      if (progress < 0.32) {
-        const enterRatio = progress / 0.32; // 0 to 1
-        opacity = Math.max(0.05, enterRatio);
-        
+      if (factor > 0) {
         if (direction === 'left') {
-          const shift = (1 - enterRatio) * -110;
+          const shift = isBelow ? -factor * 150 : -factor * 130;
           transform = `translateX(${shift}px)`;
         } else if (direction === 'right') {
-          const shift = (1 - enterRatio) * 110;
+          const shift = isBelow ? factor * 150 : factor * 130;
           transform = `translateX(${shift}px)`;
         } else if (direction === 'scale') {
-          const scale = 0.86 + enterRatio * 0.14;
-          transform = `scale(${scale}) translateY(${(1 - enterRatio) * 50}px)`;
+          const scale = 1 - factor * 0.16;
+          const shiftY = isBelow ? factor * 70 : -factor * 60;
+          transform = `scale(${scale}) translateY(${shiftY}px)`;
         } else {
-          const shift = (1 - enterRatio) * 80;
-          transform = `translateY(${shift}px)`;
-        }
-      } 
-      // 2. Active in-view zone (32% to 75% of progress)
-      else if (progress <= 0.75) {
-        opacity = 1;
-        transform = 'translate(0, 0) scale(1)';
-      } 
-      // 3. Exit zone when scrolling past top (75% to 100% of progress)
-      else {
-        const exitRatio = (progress - 0.75) / 0.25; // 0 to 1
-        opacity = Math.max(0.05, 1 - exitRatio * 1.3);
-        
-        if (direction === 'left') {
-          const shift = exitRatio * -90;
-          transform = `translateX(${shift}px)`;
-        } else if (direction === 'right') {
-          const shift = exitRatio * 90;
-          transform = `translateX(${shift}px)`;
-        } else if (direction === 'scale') {
-          const scale = 1 - exitRatio * 0.12;
-          transform = `scale(${scale}) translateY(${exitRatio * -40}px)`;
-        } else {
-          const shift = exitRatio * -60;
-          transform = `translateY(${shift}px)`;
+          const shiftY = isBelow ? factor * 90 : -factor * 70;
+          transform = `translateY(${shiftY}px)`;
         }
       }
 
       setAnimStyle({
         opacity,
         transform,
-        transition: 'transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease-out',
+        transition: 'transform 0.14s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.14s ease-out',
         willChange: 'transform, opacity'
       });
 
