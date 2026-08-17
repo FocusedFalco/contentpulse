@@ -582,3 +582,53 @@ p, span, div, label {
   }
 }
 
+/* ==========================================================================
+   Scroll-Driven Reveal & Slide-In Presentation System
+   ========================================================================== */
+.scroll-reveal {
+  opacity: 0;
+  will-change: transform, opacity;
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scroll-reveal-up {
+  transform: translateY(60px);
+}
+
+.scroll-reveal-left {
+  transform: translateX(-60px);
+}
+
+.scroll-reveal-right {
+  transform: translateX(60px);
+}
+
+.scroll-reveal-scale {
+  transform: scale(0.92) translateY(30px);
+}
+
+.scroll-reveal.is-visible {
+  opacity: 1 !important;
+  transform: translate(0, 0) scale(1) !important;
+}
+
+/* Stagger delay utilities */
+.delay-100 { transition-delay: 0.1s; }
+.delay-200 { transition-delay: 0.2s; }
+.delay-300 { transition-delay: 0.3s; }
+.delay-400 { transition-delay: 0.4s; }
+.delay-500 { transition-delay: 0.5s; }
+
+/* Section indicator line */
+.slide-indicator-line {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.3), rgba(6, 182, 212, 0.3), transparent);
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
