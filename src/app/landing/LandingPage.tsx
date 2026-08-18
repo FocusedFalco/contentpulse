@@ -202,33 +202,18 @@ export default function LandingPage() {
         zIndex: 10
       }}>
         
-        {/* Obsidian Liquid 3D Sphere Graphic */}
+        {/* Subtle Ambient Radial Light behind the hero */}
         <div style={{
           position: 'absolute',
-          right: 'clamp(-20px, 3vw, 5%)',
-          top: '20px',
-          width: 'clamp(160px, 40vw, 480px)',
-          height: 'clamp(160px, 40vw, 480px)',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle at 35% 30%, #1e1e24 0%, #0d0d10 40%, #000000 75%)',
-          boxShadow: 'inset 0 0 60px rgba(255, 255, 255, 0.08), inset -20px -20px 80px rgba(0, 0, 0, 0.9), 0 0 100px rgba(252, 28, 70, 0.08)',
-          border: '1px solid rgba(255, 255, 255, 0.06)',
+          top: '-40px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 'clamp(300px, 85vw, 1000px)',
+          height: '420px',
+          background: 'radial-gradient(ellipse at center, rgba(252, 28, 70, 0.06) 0%, rgba(255, 255, 255, 0.02) 45%, transparent 75%)',
           pointerEvents: 'none',
-          zIndex: 1,
-          opacity: 0.65
-        }}>
-          <div style={{
-            position: 'absolute',
-            top: '15%',
-            left: '20%',
-            width: '40%',
-            height: '25%',
-            borderRadius: '50%',
-            background: 'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.15) 0%, transparent 80%)',
-            transform: 'rotate(-25deg)',
-            filter: 'blur(4px)'
-          }} />
-        </div>
+          zIndex: 0
+        }} />
 
         {/* Category Eyebrow */}
         <ScrollSlide direction="up">
