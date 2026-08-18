@@ -314,7 +314,7 @@ export default function LandingPage() {
             </ScrollSlide>
           </div>
 
-          {/* Right Column: 3D Laptop Dashboard Showcase matching reference */}
+          {/* Right Column: Crimson-Themed 3D Laptop on Rock */}
           <ScrollSlide direction="right">
             <div style={{
               position: 'relative',
@@ -325,114 +325,48 @@ export default function LandingPage() {
               justifyContent: 'center',
               alignItems: 'center'
             }}>
-              {/* Backlight Ambient Glow */}
+              {/* Crimson Theme Ambient Glow */}
               <div style={{
                 position: 'absolute',
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
-                width: '110%',
-                height: '110%',
-                background: 'radial-gradient(ellipse at center, rgba(147, 51, 234, 0.22) 0%, rgba(59, 130, 246, 0.16) 40%, transparent 72%)',
-                filter: 'blur(40px)',
+                width: '120%',
+                height: '120%',
+                background: 'radial-gradient(ellipse at center, rgba(252, 28, 70, 0.12) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 70%)',
+                filter: 'blur(50px)',
                 pointerEvents: 'none',
                 zIndex: 0
               }} />
 
-              {/* Laptop & Dashboard Card Wrapper */}
+              {/* Seamless Laptop on Rock Visual */}
               <div style={{
                 position: 'relative',
                 width: '100%',
-                borderRadius: '24px',
-                overflow: 'hidden',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                background: 'linear-gradient(145deg, rgba(20, 20, 25, 0.9) 0%, rgba(8, 8, 12, 0.95) 100%)',
-                boxShadow: '0 30px 80px rgba(0, 0, 0, 0.85), 0 0 50px rgba(130, 60, 255, 0.12)',
-                transition: 'transform 0.4s ease, box-shadow 0.4s ease',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
                 zIndex: 1
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.transform = 'translateY(-6px) scale(1.01)';
-                e.currentTarget.style.boxShadow = '0 40px 100px rgba(0, 0, 0, 0.95), 0 0 70px rgba(130, 60, 255, 0.2)';
+                e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                e.currentTarget.style.boxShadow = '0 30px 80px rgba(0, 0, 0, 0.85), 0 0 50px rgba(130, 60, 255, 0.12)';
               }}
               >
-                {/* 3D Angled Laptop Showcase Image */}
                 <img
                   src="/images/hero-dashboard-mockup.jpg"
-                  alt="ContentPulse Realtime Editorial Analytics Dashboard on Laptop"
+                  alt="ContentPulse Editorial Intelligence Dashboard"
                   style={{
                     width: '100%',
                     height: 'auto',
                     display: 'block',
-                    borderRadius: '22px',
-                    filter: 'contrast(1.06) brightness(1.02)'
+                    borderRadius: '16px',
+                    filter: 'contrast(1.04) brightness(1.02)'
                   }}
                 />
-
-                {/* Floating Top-Right Realtime Status Badge */}
-                <div style={{
-                  position: 'absolute',
-                  top: '18px',
-                  right: '18px',
-                  background: 'rgba(10, 12, 18, 0.85)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  borderRadius: '9999px',
-                  padding: '6px 14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
-                  pointerEvents: 'none'
-                }}>
-                  <span style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '9999px',
-                    background: '#10b981',
-                    boxShadow: '0 0 8px #10b981',
-                    display: 'inline-block'
-                  }} />
-                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#ffffff', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
-                    Live Pulse • +43%
-                  </span>
-                </div>
-
-                {/* Floating Bottom-Left Resonance Pill */}
-                <div style={{
-                  position: 'absolute',
-                  bottom: '18px',
-                  left: '18px',
-                  background: 'rgba(12, 14, 22, 0.88)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  border: '1px solid rgba(147, 51, 234, 0.35)',
-                  borderRadius: '14px',
-                  padding: '10px 16px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px',
-                  boxShadow: '0 12px 30px rgba(0,0,0,0.7)',
-                  pointerEvents: 'none'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
-                      NLP Resonance Score
-                    </span>
-                    <span style={{ fontSize: '12px', color: '#a855f7', fontWeight: 700 }}>
-                      94.8 / 100
-                    </span>
-                  </div>
-                  <div style={{ width: '130px', height: '3px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
-                    <div style={{ width: '94.8%', height: '100%', background: 'linear-gradient(90deg, #3b82f6, #a855f7)' }} />
-                  </div>
-                </div>
-
               </div>
             </div>
           </ScrollSlide>
