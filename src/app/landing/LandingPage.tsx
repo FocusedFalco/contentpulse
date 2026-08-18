@@ -627,57 +627,57 @@ export default function LandingPage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* SLIDE 6: FINAL FULL-WIDTH CINEMATIC CTA (Edge-to-Edge, No Box) */}
+      {/* SLIDE 6: FINAL CALL TO ACTION (Slides Up with Neon Glow) */}
       {/* ========================================================================= */}
       <section style={{
-        width: '100%',
-        maxWidth: '100%',
+        maxWidth: '1000px',
         margin: '0 auto',
-        padding: '120px 20px 180px 20px',
+        padding: '90px 32px 140px 32px',
         textAlign: 'center',
-        position: 'relative',
-        overflow: 'hidden'
+        position: 'relative'
       }}>
         <ScrollSlide direction="scale">
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '40px',
-            width: '100%'
+          <div className="glass-card" style={{
+            padding: '64px 32px',
+            borderRadius: '20px',
+            background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, rgba(9, 9, 11, 0.95) 100%)',
+            border: '1px solid rgba(59, 130, 246, 0.35)',
+            boxShadow: '0 0 50px rgba(59, 130, 246, 0.15)'
           }}>
-            {/* Edge-to-Edge Cinematic Title */}
             <h2 style={{
-              fontSize: 'clamp(46px, 10vw, 140px)',
-              fontWeight: 950,
-              letterSpacing: 'clamp(-0.5px, 0.2vw, 2px)',
+              fontSize: 'clamp(36px, 6vw, 56px)',
+              fontWeight: 900,
+              letterSpacing: '-1.5px',
               color: '#ffffff',
-              margin: 0,
+              marginBottom: '20px',
               fontFamily: 'var(--font-display)',
-              textTransform: 'uppercase',
-              lineHeight: '0.9',
-              whiteSpace: 'nowrap',
-              textShadow: '0 0 60px rgba(59, 130, 246, 0.35), 0 0 20px rgba(255, 255, 255, 0.2)'
+              textTransform: 'uppercase'
             }}>
-              READY TO LOCK IN?
+              Ready to Lock In?
             </h2>
+            <p style={{
+              color: '#94a3b8',
+              fontSize: '17px',
+              maxWidth: '520px',
+              margin: '0 auto 36px auto',
+              lineHeight: '1.6'
+            }}>
+              Stop creating blindly. Start building with data-backed editorial conviction across all your media channels.
+            </p>
 
-            {/* Direct Get Started Button */}
             <Link href="/auth?mode=signup" style={{ textDecoration: 'none' }}>
               <button 
                 className="glow-btn glow-btn-primary" 
                 style={{ 
-                  padding: '18px 48px', 
-                  fontSize: '17px', 
+                  padding: '16px 40px', 
+                  fontSize: '16px', 
                   fontWeight: 800, 
                   borderRadius: '10px',
-                  boxShadow: '0 8px 32px rgba(59, 130, 246, 0.45)',
-                  letterSpacing: '0.02em',
+                  boxShadow: '0 8px 30px rgba(59, 130, 246, 0.4)',
                   cursor: 'pointer'
                 }}
               >
-                Get Started →
+                Get Started Free →
               </button>
             </Link>
           </div>
