@@ -193,16 +193,16 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* 2. HERO SECTION (198px Monumental Display, Obsidian 3D Form) */}
+      {/* 2. HERO SECTION WITH 2-COLUMN SPLIT (Text Left, Paper-Cut Kirigami Portrait Right) */}
       <section style={{
         maxWidth: '1400px',
         margin: '0 auto',
-        padding: 'clamp(50px, 10vw, 110px) clamp(18px, 4vw, 36px) clamp(70px, 12vw, 140px) clamp(18px, 4vw, 36px)',
+        padding: 'clamp(40px, 8vw, 80px) clamp(18px, 4vw, 36px) clamp(60px, 10vw, 120px) clamp(18px, 4vw, 36px)',
         position: 'relative',
         zIndex: 10
       }}>
         
-        {/* Subtle Ambient Radial Light behind the hero */}
+        {/* Subtle Ambient Light */}
         <div style={{
           position: 'absolute',
           top: '-40px',
@@ -210,104 +210,234 @@ export default function LandingPage() {
           transform: 'translateX(-50%)',
           width: 'clamp(300px, 85vw, 1000px)',
           height: '420px',
-          background: 'radial-gradient(ellipse at center, rgba(252, 28, 70, 0.06) 0%, rgba(255, 255, 255, 0.02) 45%, transparent 75%)',
+          background: 'radial-gradient(ellipse at center, rgba(252, 28, 70, 0.04) 0%, rgba(255, 255, 255, 0.02) 45%, transparent 75%)',
           pointerEvents: 'none',
           zIndex: 0
         }} />
 
-        {/* Category Eyebrow */}
-        <ScrollSlide direction="up">
-          <div style={{
-            fontSize: 'clamp(12px, 3vw, 15px)',
-            color: '#4c4c4c',
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            marginBottom: 'clamp(16px, 4vw, 28px)',
-            fontWeight: 500
-          }}>
-            [ 00 / EDITORIAL REASONING SYSTEM ]
-          </div>
-        </ScrollSlide>
-
-        {/* 198px Monumental Hero Display Heading */}
-        <ScrollSlide direction="up">
-          <h1 style={{
-            fontSize: 'clamp(38px, 10.5vw, 178px)',
-            fontWeight: 700,
-            lineHeight: '0.94',
-            letterSpacing: '-0.04em',
-            margin: '0 0 clamp(24px, 5vw, 40px) 0',
-            fontFamily: 'var(--font-sui)',
-            textTransform: 'uppercase',
-            color: '#ffffff',
-            maxWidth: '1180px',
-            position: 'relative',
-            zIndex: 2,
-            wordBreak: 'break-word'
-          }}>
-            EDITORIAL AI AT ARCHITECTURAL SCALE.
-          </h1>
-        </ScrollSlide>
-
-        {/* Body Lead */}
-        <ScrollSlide direction="up">
-          <p style={{
-            color: '#cccccc',
-            fontSize: 'clamp(15px, 3.8vw, 18px)',
-            maxWidth: '620px',
-            margin: '0 0 clamp(32px, 6vw, 48px) 0',
-            lineHeight: '1.2',
-            fontWeight: 400,
-            letterSpacing: '-0.01em',
-            position: 'relative',
-            zIndex: 2
-          }}>
-            Connect multi-channel telemetry to high-conviction publishing decisions. Real-time NLP topic resonance, cross-catalog percentile scoring, and autonomous editorial directives.
-          </p>
-        </ScrollSlide>
-
-        {/* Hero Actions: Crimson Pill + Secondary Ghost */}
-        <ScrollSlide direction="scale">
-          <div style={{ display: 'flex', gap: 'clamp(16px, 4vw, 28px)', alignItems: 'center', flexWrap: 'wrap', position: 'relative', zIndex: 2 }}>
-            <Link href="/auth?mode=signup" style={{ textDecoration: 'none' }}>
-              <button style={{
-                background: '#fc1c46',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '9999px',
-                padding: 'clamp(14px, 3vw, 16px) clamp(28px, 5vw, 36px)',
-                fontSize: 'clamp(13px, 3.5vw, 15px)',
-                fontWeight: 500,
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 480px), 1fr))',
+          gap: 'clamp(40px, 6vw, 64px)',
+          alignItems: 'center'
+        }}>
+          
+          {/* Left Column: Text & Actions */}
+          <div>
+            {/* Category Eyebrow */}
+            <ScrollSlide direction="up">
+              <div style={{
+                fontSize: 'clamp(12px, 3vw, 15px)',
+                color: '#4c4c4c',
                 textTransform: 'uppercase',
-                letterSpacing: '-0.02em',
-                cursor: 'pointer',
-                boxShadow: 'none',
-                transition: 'opacity 0.2s',
-                whiteSpace: 'nowrap'
-              }}
-              onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
-              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-              >
-                Get Started
-              </button>
-            </Link>
-            
-            <Link href="/auth?mode=signin" style={{
-              color: '#cccccc',
-              fontSize: 'clamp(14px, 3.5vw, 15px)',
-              fontWeight: 400,
-              textDecoration: 'none',
-              letterSpacing: '-0.01em',
-              transition: 'color 0.2s',
-              whiteSpace: 'nowrap'
-            }}
-            onMouseEnter={e => e.currentTarget.style.color = '#ffffff'}
-            onMouseLeave={e => e.currentTarget.style.color = '#cccccc'}
-            >
-              Sign In →
-            </Link>
+                letterSpacing: '0.08em',
+                marginBottom: 'clamp(16px, 3vw, 24px)',
+                fontWeight: 500
+              }}>
+                [ 00 / EDITORIAL REASONING SYSTEM ]
+              </div>
+            </ScrollSlide>
+
+            {/* Monumental Hero Display Heading */}
+            <ScrollSlide direction="up">
+              <h1 style={{
+                fontSize: 'clamp(38px, 6vw, 92px)',
+                fontWeight: 700,
+                lineHeight: '0.94',
+                letterSpacing: '-0.04em',
+                margin: '0 0 clamp(20px, 4vw, 32px) 0',
+                fontFamily: 'var(--font-sui)',
+                textTransform: 'uppercase',
+                color: '#ffffff',
+                wordBreak: 'break-word'
+              }}>
+                EDITORIAL AI AT ARCHITECTURAL SCALE.
+              </h1>
+            </ScrollSlide>
+
+            {/* Body Lead */}
+            <ScrollSlide direction="up">
+              <p style={{
+                color: '#cccccc',
+                fontSize: 'clamp(15px, 2.8vw, 18px)',
+                maxWidth: '540px',
+                margin: '0 0 clamp(28px, 5vw, 40px) 0',
+                lineHeight: '1.25',
+                fontWeight: 400,
+                letterSpacing: '-0.01em'
+              }}>
+                Connect multi-channel telemetry to high-conviction publishing decisions. Real-time NLP topic resonance, cross-catalog percentile scoring, and autonomous editorial directives.
+              </p>
+            </ScrollSlide>
+
+            {/* Hero Actions: Crimson Pill + Secondary Ghost */}
+            <ScrollSlide direction="scale">
+              <div style={{ display: 'flex', gap: 'clamp(16px, 4vw, 24px)', alignItems: 'center', flexWrap: 'wrap' }}>
+                <Link href="/auth?mode=signup" style={{ textDecoration: 'none' }}>
+                  <button style={{
+                    background: '#fc1c46',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '9999px',
+                    padding: 'clamp(14px, 3vw, 16px) clamp(28px, 5vw, 36px)',
+                    fontSize: 'clamp(13px, 3.5vw, 15px)',
+                    fontWeight: 500,
+                    textTransform: 'uppercase',
+                    letterSpacing: '-0.02em',
+                    cursor: 'pointer',
+                    boxShadow: 'none',
+                    transition: 'opacity 0.2s',
+                    whiteSpace: 'nowrap'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                  >
+                    Get Started
+                  </button>
+                </Link>
+                
+                <Link href="/auth?mode=signin" style={{
+                  color: '#cccccc',
+                  fontSize: 'clamp(14px, 3.5vw, 15px)',
+                  fontWeight: 400,
+                  textDecoration: 'none',
+                  letterSpacing: '-0.01em',
+                  transition: 'color 0.2s',
+                  whiteSpace: 'nowrap'
+                }}
+                onMouseEnter={e => e.currentTarget.style.color = '#ffffff'}
+                onMouseLeave={e => e.currentTarget.style.color = '#cccccc'}
+                >
+                  Sign In →
+                </Link>
+              </div>
+            </ScrollSlide>
           </div>
-        </ScrollSlide>
+
+          {/* Right Column: 3D Laptop Dashboard Showcase matching reference */}
+          <ScrollSlide direction="right">
+            <div style={{
+              position: 'relative',
+              width: '100%',
+              maxWidth: '620px',
+              margin: '0 auto',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}>
+              {/* Backlight Ambient Glow */}
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '110%',
+                height: '110%',
+                background: 'radial-gradient(ellipse at center, rgba(147, 51, 234, 0.22) 0%, rgba(59, 130, 246, 0.16) 40%, transparent 72%)',
+                filter: 'blur(40px)',
+                pointerEvents: 'none',
+                zIndex: 0
+              }} />
+
+              {/* Laptop & Dashboard Card Wrapper */}
+              <div style={{
+                position: 'relative',
+                width: '100%',
+                borderRadius: '24px',
+                overflow: 'hidden',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'linear-gradient(145deg, rgba(20, 20, 25, 0.9) 0%, rgba(8, 8, 12, 0.95) 100%)',
+                boxShadow: '0 30px 80px rgba(0, 0, 0, 0.85), 0 0 50px rgba(130, 60, 255, 0.12)',
+                transition: 'transform 0.4s ease, box-shadow 0.4s ease',
+                zIndex: 1
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translateY(-6px) scale(1.01)';
+                e.currentTarget.style.boxShadow = '0 40px 100px rgba(0, 0, 0, 0.95), 0 0 70px rgba(130, 60, 255, 0.2)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                e.currentTarget.style.boxShadow = '0 30px 80px rgba(0, 0, 0, 0.85), 0 0 50px rgba(130, 60, 255, 0.12)';
+              }}
+              >
+                {/* 3D Angled Laptop Showcase Image */}
+                <img
+                  src="/images/hero-dashboard-mockup.jpg"
+                  alt="ContentPulse Realtime Editorial Analytics Dashboard on Laptop"
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    display: 'block',
+                    borderRadius: '22px',
+                    filter: 'contrast(1.06) brightness(1.02)'
+                  }}
+                />
+
+                {/* Floating Top-Right Realtime Status Badge */}
+                <div style={{
+                  position: 'absolute',
+                  top: '18px',
+                  right: '18px',
+                  background: 'rgba(10, 12, 18, 0.85)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '9999px',
+                  padding: '6px 14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                  pointerEvents: 'none'
+                }}>
+                  <span style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '9999px',
+                    background: '#10b981',
+                    boxShadow: '0 0 8px #10b981',
+                    display: 'inline-block'
+                  }} />
+                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#ffffff', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                    Live Pulse • +43%
+                  </span>
+                </div>
+
+                {/* Floating Bottom-Left Resonance Pill */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '18px',
+                  left: '18px',
+                  background: 'rgba(12, 14, 22, 0.88)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(147, 51, 234, 0.35)',
+                  borderRadius: '14px',
+                  padding: '10px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                  boxShadow: '0 12px 30px rgba(0,0,0,0.7)',
+                  pointerEvents: 'none'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
+                      NLP Resonance Score
+                    </span>
+                    <span style={{ fontSize: '12px', color: '#a855f7', fontWeight: 700 }}>
+                      94.8 / 100
+                    </span>
+                  </div>
+                  <div style={{ width: '130px', height: '3px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+                    <div style={{ width: '94.8%', height: '100%', background: 'linear-gradient(90deg, #3b82f6, #a855f7)' }} />
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </ScrollSlide>
+
+        </div>
 
       </section>
 
