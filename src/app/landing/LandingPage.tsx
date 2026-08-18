@@ -14,8 +14,8 @@ function ScrollSlide({ direction = 'up', children, style = {}, className = '' }:
   const ref = useRef<HTMLDivElement>(null);
   const [animStyle, setAnimStyle] = useState<React.CSSProperties>({
     opacity: 0.1,
-    transform: direction === 'left' ? 'translateX(-90px)' : direction === 'right' ? 'translateX(90px)' : direction === 'scale' ? 'scale(0.88)' : 'translateY(80px)',
-    transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease-out',
+    transform: direction === 'left' ? 'translateX(-80px)' : direction === 'right' ? 'translateX(80px)' : direction === 'scale' ? 'scale(0.9)' : 'translateY(60px)',
+    transition: 'transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.32s ease-out',
     willChange: 'transform, opacity'
   });
 
@@ -33,12 +33,12 @@ function ScrollSlide({ direction = 'up', children, style = {}, className = '' }:
       const distFromCenter = elementCenter - screenCenter;
 
       // Plateau: inside middle 25% of viewport, the slide is 100% docked and centered
-      const plateau = windowHeight * 0.14;
+      const plateau = windowHeight * 0.15;
       
       let factor = 0;
       if (Math.abs(distFromCenter) > plateau) {
         const excess = Math.abs(distFromCenter) - plateau;
-        const maxTravel = windowHeight * 0.42;
+        const maxTravel = windowHeight * 0.54;
         factor = Math.min(1, excess / maxTravel);
       }
 
@@ -48,17 +48,17 @@ function ScrollSlide({ direction = 'up', children, style = {}, className = '' }:
       let transform = 'translate(0, 0) scale(1)';
       if (factor > 0) {
         if (direction === 'left') {
-          const shift = isBelow ? -factor * 150 : -factor * 130;
+          const shift = isBelow ? -factor * 120 : -factor * 100;
           transform = `translateX(${shift}px)`;
         } else if (direction === 'right') {
-          const shift = isBelow ? factor * 150 : factor * 130;
+          const shift = isBelow ? factor * 120 : factor * 100;
           transform = `translateX(${shift}px)`;
         } else if (direction === 'scale') {
-          const scale = 1 - factor * 0.16;
-          const shiftY = isBelow ? factor * 70 : -factor * 60;
+          const scale = 1 - factor * 0.12;
+          const shiftY = isBelow ? factor * 50 : -factor * 45;
           transform = `scale(${scale}) translateY(${shiftY}px)`;
         } else {
-          const shiftY = isBelow ? factor * 90 : -factor * 70;
+          const shiftY = isBelow ? factor * 70 : -factor * 55;
           transform = `translateY(${shiftY}px)`;
         }
       }
@@ -66,7 +66,7 @@ function ScrollSlide({ direction = 'up', children, style = {}, className = '' }:
       setAnimStyle({
         opacity,
         transform,
-        transition: 'transform 0.14s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.14s ease-out',
+        transition: 'transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.32s ease-out',
         willChange: 'transform, opacity'
       });
 
