@@ -8,6 +8,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
 
   // Helper to check active nav
   const isDashboard = pathname === '/';
@@ -18,6 +19,26 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
   const isSettings = pathname === '/settings';
   const isProfile = pathname === '/profile';
 
+  // Helper to compute initials from name or email
+  const getInitials = (name?: string, email?: string) => {
+    if (name && name.trim()) {
+      const parts = name.trim().split(/\s+/).filter(Boolean);
+      if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      }
+      return parts[0].slice(0, 2).toUpperCase();
+    }
+    if (email && email.trim()) {
+      const handle = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, ' ');
+      const parts = handle.trim().split(/\s+/).filter(Boolean);
+      if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      }
+      return handle.slice(0, 2).toUpperCase();
+    }
+    return 'CP';
+  };
+
   // Close mobile drawer on route change
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -25,6 +46,17 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     setMounted(true);
+
+    // Fetch user info for profile tag initials
+    fetch('/api/auth')
+      .then(res => res.json())
+      .then(data => {
+        if (data?.user) {
+          setUser(data.user);
+        }
+      })
+      .catch(() => {});
+
     const savedTheme = localStorage.getItem('cp_theme');
     if (savedTheme === 'light') {
       document.documentElement.classList.add('light-theme');
@@ -164,7 +196,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
           </Link>
           
           {/* Avatar Profile image */}
-          <Link href="/profile" title="Account Profile" style={{ textDecoration: 'none' }}>
+          <Link href="/profile" title={user?.name ? `${user.name}${user.email ? ` (${user.email})` : ''}` : 'Account Profile'} style={{ textDecoration: 'none' }}>
             <div style={{
               width: '30px',
               height: '30px',
@@ -177,9 +209,12 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
               fontSize: '11px',
               fontWeight: 800,
               color: '#ffffff',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+              letterSpacing: '0.02em',
+              userSelect: 'none'
             }}>
-              CP
+              {getInitials(user?.name, user?.email)}
             </div>
           </Link>
         </div>
