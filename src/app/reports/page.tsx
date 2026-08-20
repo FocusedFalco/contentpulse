@@ -194,9 +194,6 @@ export default function ReportsPage() {
             <h1 style={{ fontSize: '32px', fontWeight: 800, margin: 0, letterSpacing: '-0.5px', color: 'var(--color-text)' }}>
               Editorial Strategy Reports
             </h1>
-            <p style={{ color: 'var(--color-text-muted)', fontSize: '15px', marginTop: '4px' }}>
-              Decision-ready, high-signal editorial directives synthesized by Bytez AI (Qwen / DeepSeek) & Gemini
-            </p>
           </div>
 
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
