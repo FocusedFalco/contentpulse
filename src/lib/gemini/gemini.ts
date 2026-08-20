@@ -80,10 +80,12 @@ export async function ensureExpandedTaxonomy(): Promise<string[]> {
  */
 export async function generateEditorialReport(
   analysisData: StructuredAnalysisResult,
-  channel: string = 'all'
-): Promise<{ title: string; channel: string; narrative: string; isSimulated: boolean }> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  const isSimulated = !apiKey;
+  channel: string = 'all',
+  options?: { provider?: 'auto' | 'bytez' | 'gemini'; modelId?: string }
+): Promise<{ title: string; channel: string; narrative: string; isSimulated: boolean; engine?: string }> {
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const bytezKey = process.env.BYTEZ_API_KEY;
+  const provider = (options?.provider || 'auto').toLowerCase();
   const selectedChannel = (channel || 'all').toLowerCase().trim();
 
   try {
@@ -109,60 +111,76 @@ export async function generateEditorialReport(
 
   const title = getChannelTitle(selectedChannel);
 
-  if (isSimulated) {
-    const narrative = generateSimulatedReportMarkdown(analysisData, selectedChannel);
-    await query(
-      'INSERT INTO reports (title, channel, narrative, metrics_summary) VALUES ($1, $2, $3, $4)',
-      [title, selectedChannel, narrative, JSON.stringify(analysisData)]
-    );
-    return { title, channel: selectedChannel, narrative, isSimulated: true };
-  }
-
-  try {
-    const prompt = buildEditorialPrompt(analysisData, selectedChannel);
-    
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 8192,
-          },
-        }),
+  // 1. Try Bytez AI if explicitly requested or if auto and configured
+  if ((provider === 'bytez' || (provider === 'auto' && bytezKey)) && bytezKey) {
+    try {
+      const { generateEditorialReportWithBytez } = await import('../bytez/bytez');
+      const modelId = options?.modelId || 'Qwen/Qwen2.5-72B-Instruct';
+      console.log(`Generating editorial report with Bytez AI (${modelId})...`);
+      const bytezNarrative = await generateEditorialReportWithBytez(analysisData, selectedChannel, modelId);
+      
+      if (bytezNarrative && bytezNarrative.length > 100) {
+        await query(
+          'INSERT INTO reports (title, channel, narrative, metrics_summary) VALUES ($1, $2, $3, $4)',
+          [title, selectedChannel, bytezNarrative, JSON.stringify(analysisData)]
+        );
+        return { title, channel: selectedChannel, narrative: bytezNarrative, isSimulated: false, engine: `Bytez AI (${modelId.split('/').pop()})` };
       }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Gemini API returned status ${response.status}: ${errorText}`);
+    } catch (bytezErr) {
+      console.warn('Bytez report generation fallback:', bytezErr);
+      if (provider === 'bytez' && !geminiKey) {
+        // Fallback to simulated if only Bytez was requested and no Gemini
+      }
     }
-
-    const json = await response.json();
-    const narrative = json.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!narrative) {
-      throw new Error('Gemini API returned an empty response.');
-    }
-
-    await query(
-      'INSERT INTO reports (title, channel, narrative, metrics_summary) VALUES ($1, $2, $3, $4)',
-      [title, selectedChannel, narrative, JSON.stringify(analysisData)]
-    );
-
-    return { title, channel: selectedChannel, narrative, isSimulated: false };
-  } catch (err) {
-    console.warn('Gemini API call failed, falling back to simulated generation:', err);
-    const narrative = generateSimulatedReportMarkdown(analysisData, selectedChannel);
-    await query(
-      'INSERT INTO reports (title, channel, narrative, metrics_summary) VALUES ($1, $2, $3, $4)',
-      [title, selectedChannel, narrative, JSON.stringify(analysisData)]
-    );
-    return { title, channel: selectedChannel, narrative, isSimulated: true };
   }
+
+  // 2. Try Gemini API
+  if (geminiKey && provider !== 'bytez') {
+    try {
+      const prompt = buildEditorialPrompt(analysisData, selectedChannel);
+      
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${geminiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.3,
+              maxOutputTokens: 8192,
+            },
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const json = await response.json();
+        const narrative = json.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (narrative) {
+          await query(
+            'INSERT INTO reports (title, channel, narrative, metrics_summary) VALUES ($1, $2, $3, $4)',
+            [title, selectedChannel, narrative, JSON.stringify(analysisData)]
+          );
+          return { title, channel: selectedChannel, narrative, isSimulated: false, engine: 'Google Gemini' };
+        }
+      } else {
+        const errorText = await response.text();
+        console.warn(`Gemini API returned status ${response.status}: ${errorText}`);
+      }
+    } catch (geminiErr) {
+      console.warn('Gemini report generation error:', geminiErr);
+    }
+  }
+
+  // 3. Fallback to dynamic simulated report
+  const narrative = generateSimulatedReportMarkdown(analysisData, selectedChannel);
+  await query(
+    'INSERT INTO reports (title, channel, narrative, metrics_summary) VALUES ($1, $2, $3, $4)',
+    [title, selectedChannel, narrative, JSON.stringify(analysisData)]
+  );
+  return { title, channel: selectedChannel, narrative, isSimulated: true, engine: 'Simulation Engine' };
 }
 
 /**
@@ -248,7 +266,21 @@ export async function classifyTopicWithGemini(
   description: string
 ): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
+  const bytezKey = process.env.BYTEZ_API_KEY;
   const allowedTopics = await ensureExpandedTaxonomy();
+
+  // 1. Try Bytez AI (Qwen 2.5 / DeepSeek) if configured
+  if (bytezKey) {
+    try {
+      const { classifyTopicWithBytez } = await import('../bytez/bytez');
+      const bytezResult = await classifyTopicWithBytez(title, description, allowedTopics);
+      if (bytezResult) {
+        return bytezResult;
+      }
+    } catch (e) {
+      console.warn('Bytez classification fallback:', e);
+    }
+  }
 
   const getFallbackTopic = () => {
     const text = (title + ' ' + description).toLowerCase();

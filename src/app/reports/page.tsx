@@ -35,6 +35,7 @@ export default function ReportsPage() {
   const [activeTab, setActiveTab] = useState<number | null>(null);
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
   const [generateChannel, setGenerateChannel] = useState<string>('all');
+  const [aiEngine, setAiEngine] = useState<string>('auto');
   
   // Report generation progress state
   const [generating, setGenerating] = useState(false);
@@ -42,7 +43,7 @@ export default function ReportsPage() {
     { label: 'Querying channel metrics & content items...', status: 'pending' },
     { label: 'Normalizing format percentiles & topic eligibility...', status: 'pending' },
     { label: 'Synthesizing channel opportunity gaps...', status: 'pending' },
-    { label: 'Prompting Gemini AI Strategy Engine...', status: 'pending' },
+    { label: 'Prompting Bytez AI / Gemini Strategy Engine...', status: 'pending' },
     { label: 'Composing decision-ready markdown report...', status: 'pending' },
   ]);
 
@@ -98,6 +99,19 @@ export default function ReportsPage() {
     setGenerating(true);
     setGenSteps(steps => steps.map(s => ({ ...s, status: 'pending' })));
 
+    let provider = 'auto';
+    let model = 'Qwen/Qwen2.5-72B-Instruct';
+
+    if (aiEngine === 'bytez-qwen') {
+      provider = 'bytez';
+      model = 'Qwen/Qwen2.5-72B-Instruct';
+    } else if (aiEngine === 'bytez-deepseek') {
+      provider = 'bytez';
+      model = 'deepseek-ai/DeepSeek-V3';
+    } else if (aiEngine === 'gemini') {
+      provider = 'gemini';
+    }
+
     try {
       // Step 1
       setGenSteps(s => s.map((step, i) => i === 0 ? { ...step, status: 'running' } : step));
@@ -109,11 +123,18 @@ export default function ReportsPage() {
       setGenSteps(s => s.map((step, i) => i === 1 ? { ...step, status: 'done' } : (i === 2 ? { ...step, status: 'running' } : step)));
 
       // Step 3
-      await new Promise(r => setTimeout(r, 600));
-      setGenSteps(s => s.map((step, i) => i === 2 ? { ...step, status: 'done' } : (i === 3 ? { ...step, status: 'running' } : step)));
+      setGenSteps(s => s.map((step, i) => i === 2 ? { ...step, status: 'done' } : (i === 3 ? { ...step, status: 'running', label: `Synthesizing strategy with ${aiEngine === 'gemini' ? 'Google Gemini' : (aiEngine.includes('bytez') ? 'Bytez AI' : 'Bytez AI / Gemini')}...` } : step)));
 
-      // Step 4: Actual API Call with channel query parameter
-      const res = await fetch(`/api/reports?channel=${targetChannel}`, { method: 'POST' });
+      // Step 4: Actual API Call with payload
+      const res = await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channel: targetChannel,
+          provider,
+          model
+        })
+      });
       const data = await res.json();
 
       if (!data.success) {
@@ -174,11 +195,37 @@ export default function ReportsPage() {
               Editorial Strategy Reports
             </h1>
             <p style={{ color: 'var(--color-text-muted)', fontSize: '15px', marginTop: '4px' }}>
-              Decision-ready, high-signal editorial directives synthesized by Gemini AI
+              Decision-ready, high-signal editorial directives synthesized by Bytez AI (Qwen / DeepSeek) & Gemini
             </p>
           </div>
 
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            {/* AI Engine Select */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>AI Engine:</span>
+              <select
+                value={aiEngine}
+                onChange={e => setAiEngine(e.target.value)}
+                disabled={generating}
+                style={{
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '8px',
+                  color: 'var(--color-text)',
+                  padding: '8px 12px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="auto">Auto (Bytez AI / Gemini)</option>
+                <option value="bytez-qwen">Bytez AI (Qwen 2.5 72B)</option>
+                <option value="bytez-deepseek">Bytez AI (DeepSeek V3)</option>
+                <option value="gemini">Google Gemini (Flash)</option>
+              </select>
+            </div>
+
             {/* Target Channel Select */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Channel:</span>

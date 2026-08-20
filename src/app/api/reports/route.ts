@@ -57,20 +57,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let body = {};
+    const { searchParams } = new URL(req.url);
+    let body: any = {};
     try {
       body = await req.json();
     } catch (e) {
       body = {};
     }
 
-    const { channel = 'all' } = body as { channel?: string };
+    const channel = (body.channel || searchParams.get('channel') || 'all').toLowerCase().trim();
+    const provider = (body.provider || searchParams.get('provider') || 'auto').toLowerCase().trim();
+    const model = body.model || searchParams.get('model');
 
     // 1. Run database metrics aggregation specifically for this channel
     const analysisData = await runAnalysis(channel);
 
-    // 2. Call Gemini (or simulation fallback) to write narrative tailored to this channel
-    const report = await generateEditorialReport(analysisData, channel);
+    // 2. Call Bytez AI or Gemini (or simulation fallback) to write narrative tailored to this channel
+    const report = await generateEditorialReport(analysisData, channel, {
+      provider: provider as 'auto' | 'bytez' | 'gemini',
+      modelId: model
+    });
 
     return NextResponse.json({
       success: true,
